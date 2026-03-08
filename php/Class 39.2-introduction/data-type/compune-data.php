@@ -17,8 +17,6 @@
     // Short Array Syntax (Modern)
     $colors = ["Red", "Green", "Blue"];
     var_dump($colors);
-    echo "<br>";
-    echo "<br>";
 
 
     //Loop দিয়ে Array Print
