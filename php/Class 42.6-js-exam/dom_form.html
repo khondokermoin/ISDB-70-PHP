@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Form with Window Open</title>
+  </head>
+
+  <body
+    style="
+      display: flex;
+      justify-content: center;
+      align-items: top;
+      height: 100vh;
+    "
+  >
+    <form
+      style="
+        border: 1px solid black;
+        padding: 16px 8px 16px 8px;
+        width: 300px;
+        height: 40%;
+      "
+      onsubmit="
+        showData();
+        return false;
+      "
+    >
+      <label for="name">Name:</label><br />
+      <input
+        type="text"
+        id="name"
+        name="name"
+        placeholder="Enter your name"
+        required
+      /><br /><br />
+
+      <label for="uemail">Email</label><br />
+      <input
+        type="text"
+        placeholder="Enter your email"
+        name="uemail"
+      /><br /><br />
+
+      <label for="">Course:</label><br />
+      <label> <input type="checkbox" name="hobby" value="HTML" /> HTML </label>
+
+      <label>
+        <input type="checkbox" name="hobby" value="JavaScript" /> JavaScript
+      </label>
+
+      <label> <input type="checkbox" name="hobby" value="PHP" /> PHP </label>
+      <br /><br />
+
+      <label for="">Gender: </label>
+      <label>
+        <input type="radio" name="gender" value="Male" required /> Male
+        <input type="radio" name="gender" value="Female" /> Female
+      </label>
+      <br /><br />
+
+      <label for="department">Department: </label>
+      <select id="department" name="department">
+        <option value="">Select Course</option>
+        <option value="CSE">CSE</option>
+        <option value="EEE">EEE</option>
+        <option value="BBA">BBA</option>
+      </select>
+      <br /><br />
+
+      <button type="submit">Submit</button>
+      <button type="reset">Reset</button>
+    </form>
+
+    <script>
+      function showData() {
+        const uemail = document.getElementById('uemail').value;
+        const name = document.getElementById('name').value;
+        const course = document.getElementById('course').value;
+
+        const gender =
+          document.querySelector('input[name="gender"]:checked')?.value ??
+          'Not selected';
+
+        const hobbiesElements = document.querySelectorAll(
+          'input[name="department"]:checked'
+        );
+        let department = '';
+        for (const departments of hobbiesElements) {
+          department += departments.value + ', ';
+        }
+        department = department ? department.slice(0, -2) : 'None';
+
+        const newWindow = window.open('', 'FormData', 'width=400,height=400');
+
+        newWindow.document.write(`
+  <html>
+    <head>
+      <title>Form Data</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        button { margin-top: 20px; padding: 5px 10px; }
+      </style>
+    </head>
+    <body>
+      <h2>Form Data</h2>
+      <table>
+        <tr>
+          <th>Field</th>
+          <th>Value</th>
+        </tr>
+        
+        <tr>
+          <td>Name</td>
+          <td>${name}</td>
+        </tr>
+        <tr>
+          <td>Address</td>
+          <td>${uemail}</td>
+        </tr>
+        <tr>
+          <td>Course</td>
+          <td>${course}</td>
+        </tr>
+        <tr>
+          <td>Gender</td>
+          <td>${gender}</td>
+        </tr>
+        <tr>
+          <td>Department</td>
+          <td>${department}</td>
+        </tr>
+      </table>
+      <button onclick="window.print()">Print</button>
+      <button onclick="window.close()">Close</button>
+    </body>
+  </html>
+`);
+        newWindow.document.close();
+      }
+    </script>
+  </body>
+</html>
