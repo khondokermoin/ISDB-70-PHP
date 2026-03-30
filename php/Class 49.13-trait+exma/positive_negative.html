@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        const data = [4, 4, -4, -1, 0, -8, 0, 45, 9, 79];
+
+        let pos = 0, neg = 0, zero = 0, sum = 0;
+
+        for (let num of data) {
+            sum += num;         
+            if (num > 0) pos++;
+            else if (num < 0) neg++;
+            else zero++;
+        }
+
+        document.write(`Positive count: ${pos} <br>`);
+        document.write(`Negative count: ${neg} <br>`);
+        document.write(`Zero count: ${zero} <br>`);
+        document.write(`Total Sum: ${sum}`);
+    </script>
+
+</body>
+
+</html>
