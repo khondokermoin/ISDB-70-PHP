@@ -7,7 +7,7 @@ $students = [
 ];
 
 foreach ($students as list($name, $age, $email, $contuct)) {
-    echo "$name - $age - $email - $contuce<br>";
+    echo "$name - $age - $email - $contuct<br>";
 }
 
 
