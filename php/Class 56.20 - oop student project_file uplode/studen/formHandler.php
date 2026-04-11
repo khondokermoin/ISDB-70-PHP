@@ -1,4 +1,5 @@
 <?php
+// File Include / File Import
 require_once __DIR__ . '/student.php';
 require_once __DIR__ . '/studentRepository.php';
 
@@ -24,7 +25,7 @@ if (isset($_POST['btnSubmit'])) {
         $student = new Student($id, $name, $course, $phone);
         $repo = new StudentRepository();
 
-        $repo->save($student);
+        $repo->save($student); // parameter pass
 
         $message = 'Student saved successfully.';
         $messageType = 'success';

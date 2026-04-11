@@ -34,3 +34,6 @@ abstract class Person
     // abstract method
     abstract public function getRole();
 }
+
+// person.php → base structure দেয়
+// student.php → সেই structure inherit করে Student-specific কাজ করে

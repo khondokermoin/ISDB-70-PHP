@@ -13,7 +13,7 @@ class Student extends Person
         parent::__construct($id, $name, $phone);
         $this->course = trim($course);
     }
-
+// Single Responsibility Principle (SRP) | reusable হয়
     public function getCourse()
     {
         return $this->course;
