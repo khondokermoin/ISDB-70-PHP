@@ -1,5 +1,4 @@
-Microsoft Windows [Version 10.0.26200.8246]
-(c) Microsoft Corporation. All rights reserved.
+
 
 C:\Users\WDPF PC -01>cd ..
 
@@ -20,8 +19,7 @@ C:\>dir
 03/31/2026  09:18 AM    <DIR>          Program Files (x86)
 03/16/2026  03:46 PM    <DIR>          Users
 04/15/2026  01:19 PM    <DIR>          Windows
-               0 File(s)              0 bytes
-               9 Dir(s)  161,194,704,896 bytes free
+
 
 C:\>cd 1295473_moin
 
@@ -35,14 +33,12 @@ C:\1295473_moin>dir
 03/29/2026  09:14 AM    <DIR>          Class Work
 03/29/2026  09:15 AM    <DIR>          wallpapers
 03/29/2026  09:44 AM    <DIR>          xampp
-               0 File(s)              0 bytes
-               4 Dir(s)  161,193,975,808 bytes free
+
 
 C:\1295473_moin>cd xampp
 
 C:\1295473_moin\xampp>dir
- Volume in drive C has no label.
- Volume Serial Number is 1402-421A
+
 
  Directory of C:\1295473_moin\xampp
 
@@ -99,14 +95,12 @@ C:\1295473_moin\xampp>dir
 03/29/2026  09:40 AM             1,084 xampp_shell.bat
 03/30/2013  06:29 PM           118,784 xampp_start.exe
 03/30/2013  06:29 PM           118,784 xampp_stop.exe
-              28 File(s)     10,565,396 bytes
-              25 Dir(s)  161,193,975,808 bytes free
+
 
 C:\1295473_moin\xampp>cd mysql
 
 C:\1295473_moin\xampp\mysql>dir
- Volume in drive C has no label.
- Volume Serial Number is 1402-421A
+
 
  Directory of C:\1295473_moin\xampp\mysql
 
@@ -130,13 +124,7 @@ C:\1295473_moin\xampp\mysql>dir
 C:\1295473_moin\xampp\mysql>cd bin
 
 C:\1295473_moin\xampp\mysql\bin>mysql -u root
-Welcome to the MariaDB monitor.  Commands end with ; or \g.
-Your MariaDB connection id is 8
-Server version: 10.4.32-MariaDB mariadb.org binary distribution
 
-Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
-
-Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
 
 MariaDB [(none)]> show databases;
 +--------------------+
@@ -151,38 +139,12 @@ MariaDB [(none)]> show databases;
 5 rows in set (0.001 sec)
 
 MariaDB [(none)]> create database office;
-Query OK, 1 row affected (0.001 sec)
 
 MariaDB [(none)]> use office;
 Database changed
-MariaDB [office]> create table employes (id int auto_increment primary key, name varchar(20), possion varchar(25), salary int);
-Query OK, 0 rows affected (0.055 sec)
 
-MariaDB [office]> INSERT INTO employees (name, position, salary) VALUES
-    -> ('Alice Smith', 'Manager', 60000),
-    -> ('Bob Johnson', 'Developer', 50000),
-    -> ('Charlie Brown', 'Designer', 45000);
-ERROR 1146 (42S02): Table 'office.employees' doesn't exist
-MariaDB [office]> INSERT INTO employees (name, position, salary) VALUES ('Alice Smith', 'Manager', 60000),('Bob Johnson', 'Developer', 50000),('Charlie Brown', 'Designer', 45000);
-ERROR 1146 (42S02): Table 'office.employees' doesn't exist
-MariaDB [office]> SELECT * FROM employees;
-ERROR 1146 (42S02): Table 'office.employees' doesn't exist
-MariaDB [office]> SELECT * FROM employees;
-ERROR 1146 (42S02): Table 'office.employees' doesn't exist
-MariaDB [office]> CREATE TABLE employees (
-    ->     id INT AUTO_INCREMENT PRIMARY KEY,
-    ->     name VARCHAR(50),
-    ->     position VARCHAR(50),
-    ->     salary INT
-    -> );
-Query OK, 0 rows affected (0.058 sec)
-
-MariaDB [office]>
 MariaDB [office]> CREATE TABLE employees (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(50),position VARCHAR(50),salary INT);
-ERROR 1050 (42S01): Table 'employees' already exists
-MariaDB [office]> INSERT INTO employees (name, position, salary) VALUES ('Alice Smith', 'Manager', 60000),('Bob Johnson', 'Developer', 50000),('Charlie Brown', 'Designer', 45000);
-Query OK, 3 rows affected (0.056 sec)
-Records: 3  Duplicates: 0  Warnings: 0
+
 
 MariaDB [office]> SELECT * FROM employees;
 +----+---------------+-----------+--------+
