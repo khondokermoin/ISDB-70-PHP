@@ -1,0 +1,276 @@
+Microsoft Windows [Version 10.0.26200.8246]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Users\WDPF PC -01>cd ..
+
+C:\Users>cd ..
+
+C:\>dir
+ Volume in drive C has no label.
+ Volume Serial Number is 1402-421A
+
+ Directory of C:\
+
+03/29/2026  09:34 AM    <DIR>          1295473
+03/29/2026  09:15 AM    <DIR>          1295473_moin
+09/16/2025  01:47 AM    <DIR>          inetpub
+04/15/2026  06:12 PM    <DIR>          Intel
+04/01/2024  01:26 PM    <DIR>          PerfLogs
+04/04/2026  06:58 PM    <DIR>          Program Files
+03/31/2026  09:18 AM    <DIR>          Program Files (x86)
+03/16/2026  03:46 PM    <DIR>          Users
+04/15/2026  01:19 PM    <DIR>          Windows
+               0 File(s)              0 bytes
+               9 Dir(s)  161,194,704,896 bytes free
+
+C:\>cd 1295473_moin
+
+C:\1295473_moin>dir
+ Volume in drive C has no label.
+ Volume Serial Number is 1402-421A
+
+ Directory of C:\1295473_moin
+
+03/29/2026  09:15 AM    <DIR>          .
+03/29/2026  09:14 AM    <DIR>          Class Work
+03/29/2026  09:15 AM    <DIR>          wallpapers
+03/29/2026  09:44 AM    <DIR>          xampp
+               0 File(s)              0 bytes
+               4 Dir(s)  161,193,975,808 bytes free
+
+C:\1295473_moin>cd xampp
+
+C:\1295473_moin\xampp>dir
+ Volume in drive C has no label.
+ Volume Serial Number is 1402-421A
+
+ Directory of C:\1295473_moin\xampp
+
+03/29/2026  09:44 AM    <DIR>          .
+03/29/2026  09:15 AM    <DIR>          ..
+03/29/2026  09:40 AM    <DIR>          anonymous
+03/29/2026  09:40 AM    <DIR>          apache
+06/07/2013  05:15 PM               436 apache_start.bat
+10/01/2019  01:13 PM               190 apache_stop.bat
+04/05/2021  10:16 PM            10,324 catalina_service.bat
+04/05/2021  10:17 PM             3,766 catalina_start.bat
+04/05/2021  10:17 PM             3,529 catalina_stop.bat
+03/29/2026  09:44 AM    <DIR>          cgi-bin
+03/29/2026  09:40 AM    <DIR>          contrib
+03/29/2026  09:40 AM             3,355 ctlscript.bat
+03/29/2026  09:44 AM    <DIR>          FileZillaFTP
+03/30/2013  06:29 PM                78 filezilla_setup.bat
+06/07/2013  05:15 PM               150 filezilla_start.bat
+06/07/2013  05:15 PM               149 filezilla_stop.bat
+03/28/2026  09:05 PM    <DIR>          htdocs
+03/29/2026  09:40 AM    <DIR>          img
+03/29/2026  09:44 AM    <DIR>          install
+06/15/2022  10:07 PM               299 killprocess.bat
+03/29/2026  09:40 AM    <DIR>          licenses
+03/29/2026  09:40 AM    <DIR>          locale
+03/29/2026  09:40 AM    <DIR>          mailoutput
+03/29/2026  09:40 AM    <DIR>          mailtodisk
+03/29/2026  09:44 AM    <DIR>          MercuryMail
+06/07/2013  05:15 PM               136 mercury_start.bat
+06/07/2013  05:15 PM                60 mercury_stop.bat
+03/29/2026  09:40 AM    <DIR>          mysql
+06/03/2019  05:39 PM               471 mysql_start.bat
+10/01/2019  01:13 PM               270 mysql_stop.bat
+03/13/2017  05:04 PM               824 passwords.txt
+03/29/2026  09:41 AM    <DIR>          perl
+03/29/2026  09:44 AM    <DIR>          php
+03/29/2026  09:43 AM    <DIR>          phpMyAdmin
+03/29/2026  09:43 AM               922 properties.ini
+11/19/2023  05:10 PM             7,498 readme_de.txt
+11/19/2023  05:10 PM             7,368 readme_en.txt
+03/29/2026  09:43 AM    <DIR>          sendmail
+03/30/2013  06:29 PM            60,928 service.exe
+03/30/2013  06:29 PM             1,255 setup_xampp.bat
+03/29/2026  09:40 AM    <DIR>          src
+11/29/2020  07:38 PM             1,671 test_php.bat
+04/16/2026  09:24 AM    <DIR>          tmp
+03/29/2026  09:40 AM    <DIR>          tomcat
+03/29/2026  09:44 AM           268,459 uninstall.dat
+03/29/2026  09:44 AM         6,585,985 uninstall.exe
+03/29/2026  09:44 AM    <DIR>          webalizer
+03/29/2026  09:40 AM    <DIR>          webdav
+04/06/2021  05:38 PM         3,368,448 xampp-control.exe
+03/29/2026  09:44 AM               173 xampp-control.ini
+03/29/2026  09:40 AM             1,084 xampp_shell.bat
+03/30/2013  06:29 PM           118,784 xampp_start.exe
+03/30/2013  06:29 PM           118,784 xampp_stop.exe
+              28 File(s)     10,565,396 bytes
+              25 Dir(s)  161,193,975,808 bytes free
+
+C:\1295473_moin\xampp>cd mysql
+
+C:\1295473_moin\xampp\mysql>dir
+ Volume in drive C has no label.
+ Volume Serial Number is 1402-421A
+
+ Directory of C:\1295473_moin\xampp\mysql
+
+03/29/2026  09:40 AM    <DIR>          .
+03/29/2026  09:44 AM    <DIR>          ..
+03/29/2026  09:40 AM    <DIR>          backup
+03/29/2026  09:44 AM    <DIR>          bin
+10/30/2023  06:36 PM            17,987 COPYING
+10/30/2023  06:36 PM             2,104 CREDITS
+04/16/2026  09:24 AM    <DIR>          data
+03/30/2013  06:29 PM               848 mysql_installservice.bat
+03/30/2013  06:29 PM               395 mysql_uninstallservice.bat
+10/30/2023  06:36 PM             2,874 README.md
+06/03/2019  05:39 PM             1,095 resetroot.bat
+03/29/2026  09:40 AM    <DIR>          scripts
+03/29/2026  09:40 AM    <DIR>          share
+10/30/2023  06:36 PM            86,263 THIRDPARTY
+               7 File(s)        111,566 bytes
+               7 Dir(s)  161,193,975,808 bytes free
+
+C:\1295473_moin\xampp\mysql>cd bin
+
+C:\1295473_moin\xampp\mysql\bin>mysql -u root
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 8
+Server version: 10.4.32-MariaDB mariadb.org binary distribution
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| phpmyadmin         |
+| test               |
++--------------------+
+5 rows in set (0.001 sec)
+
+MariaDB [(none)]> create database office;
+Query OK, 1 row affected (0.001 sec)
+
+MariaDB [(none)]> use office;
+Database changed
+MariaDB [office]> create table employes (id int auto_increment primary key, name varchar(20), possion varchar(25), salary int);
+Query OK, 0 rows affected (0.055 sec)
+
+MariaDB [office]> INSERT INTO employees (name, position, salary) VALUES
+    -> ('Alice Smith', 'Manager', 60000),
+    -> ('Bob Johnson', 'Developer', 50000),
+    -> ('Charlie Brown', 'Designer', 45000);
+ERROR 1146 (42S02): Table 'office.employees' doesn't exist
+MariaDB [office]> INSERT INTO employees (name, position, salary) VALUES ('Alice Smith', 'Manager', 60000),('Bob Johnson', 'Developer', 50000),('Charlie Brown', 'Designer', 45000);
+ERROR 1146 (42S02): Table 'office.employees' doesn't exist
+MariaDB [office]> SELECT * FROM employees;
+ERROR 1146 (42S02): Table 'office.employees' doesn't exist
+MariaDB [office]> SELECT * FROM employees;
+ERROR 1146 (42S02): Table 'office.employees' doesn't exist
+MariaDB [office]> CREATE TABLE employees (
+    ->     id INT AUTO_INCREMENT PRIMARY KEY,
+    ->     name VARCHAR(50),
+    ->     position VARCHAR(50),
+    ->     salary INT
+    -> );
+Query OK, 0 rows affected (0.058 sec)
+
+MariaDB [office]>
+MariaDB [office]> CREATE TABLE employees (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(50),position VARCHAR(50),salary INT);
+ERROR 1050 (42S01): Table 'employees' already exists
+MariaDB [office]> INSERT INTO employees (name, position, salary) VALUES ('Alice Smith', 'Manager', 60000),('Bob Johnson', 'Developer', 50000),('Charlie Brown', 'Designer', 45000);
+Query OK, 3 rows affected (0.056 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+MariaDB [office]> SELECT * FROM employees;
++----+---------------+-----------+--------+
+| id | name          | position  | salary |
++----+---------------+-----------+--------+
+|  1 | Alice Smith   | Manager   |  60000 |
+|  2 | Bob Johnson   | Developer |  50000 |
+|  3 | Charlie Brown | Designer  |  45000 |
++----+---------------+-----------+--------+
+3 rows in set (0.000 sec)
+
+MariaDB [office]> DROP TABLE employes;
+Query OK, 0 rows affected (0.063 sec)
+
+MariaDB [office]> TRUNCATE TABLE employees;
+Query OK, 0 rows affected (0.018 sec)
+
+MariaDB [office]> DROP TABLE employes;
+ERROR 1051 (42S02): Unknown table 'office.employes'
+MariaDB [office]> INSERT INTO employees (name, position, salary) VALUES ('Alice Smith', 'Manager', 60000),('Bob Johnson', 'Developer', 50000),('Charlie Brown', 'Designer', 45000);
+Query OK, 3 rows affected (0.005 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+MariaDB [office]> DROP TABLE employes;
+ERROR 1051 (42S02): Unknown table 'office.employes'
+MariaDB [office]> DROP TABLE employees;
+Query OK, 0 rows affected (0.009 sec)
+
+MariaDB [office]> create table employees (id int auto_increment primary key, name varchar(20), possion varchar(25), salary int);
+Query OK, 0 rows affected (0.040 sec)
+
+MariaDB [office]> INSERT INTO employees (name, position, salary) VALUES ('Alice Smith', 'Manager', 60000),('Bob Johnson', 'Developer', 50000),('Charlie Brown', 'Designer', 45000);
+ERROR 1054 (42S22): Unknown column 'position' in 'field list'
+MariaDB [office]> DESCRIBE employees;
++---------+-------------+------+-----+---------+----------------+
+| Field   | Type        | Null | Key | Default | Extra          |
++---------+-------------+------+-----+---------+----------------+
+| id      | int(11)     | NO   | PRI | NULL    | auto_increment |
+| name    | varchar(20) | YES  |     | NULL    |                |
+| possion | varchar(25) | YES  |     | NULL    |                |
+| salary  | int(11)     | YES  |     | NULL    |                |
++---------+-------------+------+-----+---------+----------------+
+4 rows in set (0.023 sec)
+
+MariaDB [office]> INSERT INTO employees (name, position, salary) VALUES ('Alice Smith', 'Manager', 60000),('Bob Johnson', 'Developer', 50000),('Charlie Brown', 'Designer', 45000);
+ERROR 1054 (42S22): Unknown column 'position' in 'field list'
+MariaDB [office]> INSERT INTO employees (name, possion, salary) VALUES ('Alice Smith', 'Manager', 60000),('Bob Johnson', 'Developer', 50000),('Charlie Brown', 'Designer', 45000);
+Query OK, 3 rows affected (0.004 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+MariaDB [office]> SELECT * FROM employees;
++----+---------------+-----------+--------+
+| id | name          | possion   | salary |
++----+---------------+-----------+--------+
+|  1 | Alice Smith   | Manager   |  60000 |
+|  2 | Bob Johnson   | Developer |  50000 |
+|  3 | Charlie Brown | Designer  |  45000 |
++----+---------------+-----------+--------+
+3 rows in set (0.000 sec)
+
+MariaDB [office]> update employees set neme = 'Moin' where id =2;
+ERROR 1054 (42S22): Unknown column 'neme' in 'field list'
+MariaDB [office]> update employees set name = 'Moin' where id =2;
+Query OK, 1 row affected (0.004 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [office]> SELECT * FROM employees;
++----+---------------+-----------+--------+
+| id | name          | possion   | salary |
++----+---------------+-----------+--------+
+|  1 | Alice Smith   | Manager   |  60000 |
+|  2 | Moin          | Developer |  50000 |
+|  3 | Charlie Brown | Designer  |  45000 |
++----+---------------+-----------+--------+
+3 rows in set (0.000 sec)
+
+MariaDB [office]> delete from employees where id 3;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '3' at line 1
+MariaDB [office]> delete from employees where id= 3;
+Query OK, 1 row affected (0.020 sec)
+
+MariaDB [office]> SELECT * FROM employees;\
++----+-------------+-----------+--------+
+| id | name        | possion   | salary |
++----+-------------+-----------+--------+
+|  1 | Alice Smith | Manager   |  60000 |
+|  2 | Moin        | Developer |  50000 |
++----+-------------+-----------+--------+
+2 rows in set (0.000 sec)
+
+MariaDB [office]>
