@@ -1,13 +1,21 @@
 <?php
 $db = new mysqli("localhost", "root", "", "erp_evidence");
 
+if(isset($_POST['btnManufacturer'])){
+	$mname = $_POST['m_name'];
+	$maddress = $_POST['m_address'];
+	$mnumbers = $_POST['m_numbers'];
+	$db->query(" call add_manufacturer('$mname','$maddress','$mnumbers') ");
+}
+
 if (isset($_POST['addProduct'])) {
     $pname = $_POST['p_name'];
     $pprice = $_POST['p_price'];
     $m_brand_id = $_POST['m_brand_id'];
 
-    $db->query("INSERT INTO product (p_name, p_price, m_brand_id) 
-                VALUES ('$pname', '$pprice', '$m_brand_id')");
+    $db->query(" call add_product('$pname','$pprice','$m_brand_id') ");
+    /* $db->query("INSERT INTO product (p_name, p_price, m_brand_id) 
+                VALUES ('$pname', '$pprice', '$m_brand_id')"); */
 }
 ?>
 <!DOCTYPE html>
@@ -48,14 +56,10 @@ if (isset($_POST['addProduct'])) {
             <option value="">Select Manufacturer</option>
 
             <?php
-            $result = $db->query("SELECT m_id, m_name FROM add_manufacturer");
+            $result = $db->query("SELECT * FROM manufacturer");
 
-            while ($row = $result->fetch_assoc()) {
-            ?>
-                <option value="<?php echo $row['m_id']; ?>">
-                    <?php echo $row['m_name']; ?>
-                </option>
-            <?php
+            while (list($_mid,$_mname,$_maddress)= $result->fetch_row()){
+                echo "<option value = '$_mid'>$_mname</option>";
             }
             ?>
         </select><br><br>
