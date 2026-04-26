@@ -14,7 +14,6 @@ if (!$conn) {
 // ২. ফর্ম সাবমিট হলে কী ঘটবে তা নির্ধারণ করা
 if (isset($_POST['submit'])) {
     
-    // ডাটাবেসে ID সাধারণত Auto Increment থাকে, তাই আমরা NULL দিচ্ছি
     $did = NULL; 
     $dname = $_POST['name'];
     $daddress = $_POST['address'];
@@ -22,14 +21,15 @@ if (isset($_POST['submit'])) {
     $dphpne = $_POST['phone'];
 
     // ৩. dstudent Stored Procedure কল করা
-    $sql = "CALL dstudent('$did', '$dname', '$daddress', '$dclass', '$dphpne')";
+    /* $sql = "CALL dstudent('$did', '$dname', '$daddress', '$dclass', '$dphpne')"; */
+
+    $sql = "INSERT INTO student (sname, saddress, sclass, sphpne) 
+        VALUES ('$dname', '$daddress', '$dclass', '$dphpne')";
 
     if (mysqli_query($conn, $sql)) {
-        // ডাটা সফলভাবে সেভ হলে index.php পেজে রিডাইরেক্ট করে দেবে
         header("Location: index.php");
         exit();
     } else {
-        // কোনো সমস্যা হলে এরর মেসেজ দেখাবে
         $error_message = "Error saving data: " . mysqli_error($conn);
     }
 }

@@ -10,11 +10,14 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
-// [FIX]: dstudent() এর বদলে GetAllStudents() কল করতে হবে
-$sql = "CALL GetAllStudents()"; 
+// using procedures
+/* $sql = "CALL GetAllStudents()"; 
+$result = mysqli_query($conn, $sql); */
+
+// using drect table name
+$sql = "SELECT * FROM student"; 
 $result = mysqli_query($conn, $sql);
 
-// যদি error চেক করতে চান, তাহলে নিচের লাইনটা সাময়িকভাবে ব্যবহার করতে পারেন
 if (!$result) {
     echo "Error: " . mysqli_error($conn);
 }
@@ -68,8 +71,8 @@ if (!$result) {
             </thead>
             <tbody>
                 <?php
-                // যদি কুয়েরি ঠিকমতো রান করে এবং ডেটা থাকে
-                if ($result && mysqli_num_rows($result) > 0) {
+
+                if (mysqli_num_rows($result) > 0) {
                     while($row = mysqli_fetch_assoc($result)) {
                         ?>
                         <tr>
