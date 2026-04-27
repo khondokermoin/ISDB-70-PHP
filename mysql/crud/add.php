@@ -65,7 +65,7 @@ if (isset($_POST['submit'])) {
 
     <div class="header">CRUD</div>
     <div class="navbar">
-        <a href="index.php">HOME</a>
+        <a href="inde.php">HOME</a>
         <a href="add.php">ADD</a>
         <a href="./update.php">UPDATE</a>
         <a href="./delete.php">DELETE</a>
