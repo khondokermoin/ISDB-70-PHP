@@ -12,6 +12,7 @@
             <?php 
                 if($_GET['msg'] == 'deleted') echo "Package successfully deleted!";
                 if($_GET['msg'] == 'updated') echo "Package successfully updated!";
+                if($_GET['msg'] == 'created') echo "Package successfully created!";
             ?>
         </div>
     <?php endif; ?>
@@ -22,6 +23,7 @@
                 <tr>
                     <th class="py-3 px-4 border-b">ID</th>
                     <th class="py-3 px-4 border-b">Package Name</th>
+                    <th class="py-3 px-4 border-b">Type</th>
                     <th class="py-3 px-4 border-b">Speed</th>
                     <th class="py-3 px-4 border-b">Price</th>
                     <th class="py-3 px-4 border-b">Status</th>
@@ -33,23 +35,27 @@
                 if ($packages->rowCount() > 0) {
                     while ($row = $packages->fetch()) {
                         $statusClass = $row['status'] == 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                        $typeClass = $row['type'] == 'corporate' ? 'text-blue-600 font-semibold' : 'text-gray-600';
+                        
+                        // Custom logic for Enterprise packages
+                        $speedDisplay = ($row['speed_mbps'] == 0) ? 'Custom' : $row['speed_mbps'] . ' Mbps';
+                        $priceDisplay = ($row['price'] == 0) ? 'Negotiable' : '৳' . number_format($row['price']);
                         ?>
                         <tr class="hover:bg-gray-50">
                             <td class="py-2 px-4 border-b"><?php echo $row['package_id']; ?></td>
-                            <td class="py-2 px-4 border-b font-semibold"><?php echo htmlspecialchars($row['name']); ?></td>
-                            <td class="py-2 px-4 border-b"><?php echo $row['speed_mbps']; ?> Mbps</td>
-                            <td class="py-2 px-4 border-b">৳<?php echo $row['price']; ?></td>
+                            <td class="py-2 px-4 border-b font-bold text-gray-800"><?php echo htmlspecialchars($row['name']); ?></td>
+                            <td class="py-2 px-4 border-b uppercase text-xs <?php echo $typeClass; ?>"><?php echo htmlspecialchars($row['type']); ?></td>
+                            <td class="py-2 px-4 border-b"><?php echo $speedDisplay; ?></td>
+                            <td class="py-2 px-4 border-b"><?php echo $priceDisplay; ?></td>
                             <td class="py-2 px-4 border-b">
                                 <span class="px-2 py-1 text-xs font-bold rounded-full <?php echo $statusClass; ?>">
                                     <?php echo ucfirst($row['status']); ?>
                                 </span>
                             </td>
                             <td class="py-2 px-4 border-b text-center">
-                                <!-- Edit Button -->
                                 <a href="admin.php?page=edit_package&id=<?php echo $row['package_id']; ?>" class="text-blue-500 hover:text-blue-700 mx-1">
                                     <i class="fa fa-edit"></i>
                                 </a>
-                                <!-- Delete Button (with JS Confirmation) -->
                                 <a href="admin.php?action=delete_package&id=<?php echo $row['package_id']; ?>" onclick="return confirm('Are you sure you want to delete this package?');" class="text-red-500 hover:text-red-700 mx-1">
                                     <i class="fa fa-trash"></i>
                                 </a>
@@ -58,7 +64,7 @@
                         <?php
                     }
                 } else {
-                    echo "<tr><td colspan='6' class='text-center py-4 text-gray-500'>No packages found.</td></tr>";
+                    echo "<tr><td colspan='7' class='text-center py-4 text-gray-500'>No packages found.</td></tr>";
                 }
                 ?>
             </tbody>

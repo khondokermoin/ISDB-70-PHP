@@ -66,28 +66,41 @@ include '../views/layouts/header.php';
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
             <?php
-            $packageModel = new package($db);
+            // Make sure the class name is capitalized if defined as "Package"
+            $packageModel = new Package($db);
             $packages = $packageModel->getAllActive();
 
             if ($packages->rowCount() > 0) {
                 while ($row = $packages->fetch()) {
+                    
+                    // 🔥 Dynamic Logic for Quota, Speed, and Price
+                    $quotaDisplay = is_null($row['quota_gb']) ? 'Unlimited Data' : htmlspecialchars($row['quota_gb']) . ' GB';
+                    $speedDisplay = ($row['speed_mbps'] == 0) ? 'Custom' : htmlspecialchars($row['speed_mbps']) . ' Mbps';
+                    $priceDisplay = ($row['price'] == 0) ? 'Negotiable' : number_format($row['price']);
+                    
                     ?>
-                    <!-- Package Card -->
                     <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden transform transition duration-300 hover:scale-105 hover:border-amberRed">
                         <div class="p-6 text-center border-b border-gray-100">
                             <i class="fa fa-cloud text-5xl text-gray-300 mb-4"></i>
                             <h4 class="text-xl font-bold text-gray-800 uppercase tracking-wide"><?php echo htmlspecialchars($row['name']); ?></h4>
                             <div class="my-4">
                                 <span class="text-sm font-semibold text-gray-500 align-top">BDT</span>
-                                <span class="text-4xl font-extrabold text-amberRed"><?php echo htmlspecialchars($row['price']); ?></span>
+                                <span class="text-4xl font-extrabold text-amberRed"><?php echo $priceDisplay; ?></span>
                                 <span class="text-gray-500">/mo</span>
                             </div>
                         </div>
                         <div class="p-6 bg-gray-50">
                             <ul class="space-y-3 text-gray-600 text-center mb-6">
-                                <li>Speed: <span class="font-bold text-gray-800"><?php echo htmlspecialchars($row['speed_mbps']); ?> Mbps</span></li>
-                                <li>Quota: <span class="font-bold text-gray-800"><?php echo htmlspecialchars($row['quota_gb']); ?> GB</span></li>
+                                <li>Speed: <span class="font-bold text-gray-800"><?php echo $speedDisplay; ?></span></li>
+                                
+                                <li>Quota: <span class="font-bold text-gray-800"><?php echo $quotaDisplay; ?></span></li>
+                                
                                 <li>Duration: <?php echo htmlspecialchars($row['duration_days']); ?> Days</li>
+
+                                <?php if (!empty($row['features'])): ?>
+                                    <li>Features: <span class="font-bold text-amberRed"><?php echo htmlspecialchars($row['features']); ?></span></li>
+                                <?php endif; ?>
+
                                 <li>24/7 Customer Support</li>
                                 <li>Fiber Optics</li>
                             </ul>

@@ -39,5 +39,14 @@ class Package {
         $stmt->bindParam(':id', $id);
         return $stmt->execute();
     }
+    
+    // নির্দিষ্ট টাইপের (home বা corporate) অ্যাকটিভ প্যাকেজগুলো আনার মেথড
+    public function getActiveByType($type) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE status = 'active' AND type = :type ORDER BY price ASC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':type', $type);
+        $stmt->execute();
+        return $stmt;
+    }
 }
 ?>

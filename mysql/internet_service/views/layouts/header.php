@@ -51,14 +51,14 @@
     <header class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center max-w-6xl">
             <!-- Logo -->
-            <a href="/" class="text-3xl font-extrabold text-amberRed tracking-tight">
+            <a href="index.php" class="text-3xl font-extrabold text-amberRed tracking-tight">
                 AMAR <span class="text-gray-800">IT</span>
             </a>
             
             <!-- Desktop Menu -->
             <nav class="hidden md:flex space-x-6 font-semibold text-gray-600">
                 <a href="#" class="hover:text-amberRed transition">Home Internet</a>
-                <a href="#" class="hover:text-amberRed transition">Corporate</a>
+                <a href="corporate.php" class="hover:text-amberRed transition">Corporate</a>
                 <a href="#" class="hover:text-amberRed transition">IPTSP</a>
                 <a href="#" class="hover:text-amberRed transition">Hosting</a>
                 <a href="#" class="hover:text-amberRed transition">Support</a>

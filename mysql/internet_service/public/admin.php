@@ -21,38 +21,52 @@ if ($action == 'delete_package' && isset($_GET['id'])) {
 // --- POST REQUESTS (Create & Update) ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
+    // Quota Logic (Unlimited or Limited)
+    $quota_type = isset($_POST['quota_type']) ? $_POST['quota_type'] : 'limited';
+    $quota_gb = ($quota_type === 'unlimited') ? NULL : $_POST['quota_gb'];
+
+    // Features Logic (Only for Corporate)
+    $features = isset($_POST['features']) ? $_POST['features'] : NULL;
+    
     // UPDATE PACKAGE
     if ($action == 'update_package') {
         $id = $_POST['package_id'];
-        $query = "UPDATE packages SET name=:name, speed_mbps=:speed, price=:price, quota_gb=:quota, duration_days=:duration, status=:status WHERE package_id=:id";
+        $query = "UPDATE packages SET name=:name, type=:type, features=:features, speed_mbps=:speed, price=:price, quota_gb=:quota, duration_days=:duration, status=:status WHERE package_id=:id";
         $stmt = $db->prepare($query);
         $stmt->bindParam(':name', $_POST['name']);
+        $stmt->bindParam(':type', $_POST['type']);
+        $stmt->bindParam(':features', $features);
         $stmt->bindParam(':speed', $_POST['speed_mbps']);
         $stmt->bindParam(':price', $_POST['price']);
-        $stmt->bindParam(':quota', $_POST['quota_gb']);
+        $stmt->bindParam(':quota', $quota_gb);
         $stmt->bindParam(':duration', $_POST['duration_days']);
         $stmt->bindParam(':status', $_POST['status']);
         $stmt->bindParam(':id', $id);
 
         if ($stmt->execute()) {
+            // FIX RELOAD BUG: Redirect with success message
             header("Location: admin.php?page=packages&msg=updated");
-            exit;
+            exit; // Must call exit after header
         }
     }
 
     // CREATE PACKAGE
     if (isset($_GET['page']) && $_GET['page'] == 'create_package') {
-        $query = "INSERT INTO packages (name, speed_mbps, price, quota_gb, duration_days, status) VALUES (:name, :speed, :price, :quota, :duration, :status)";
+        $query = "INSERT INTO packages (name, type, features, speed_mbps, price, quota_gb, duration_days, status) VALUES (:name, :type, :features, :speed, :price, :quota, :duration, :status)";
         $stmt = $db->prepare($query);
         $stmt->bindParam(':name', $_POST['name']);
+        $stmt->bindParam(':type', $_POST['type']);
+        $stmt->bindParam(':features', $features);
         $stmt->bindParam(':speed', $_POST['speed_mbps']);
         $stmt->bindParam(':price', $_POST['price']);
-        $stmt->bindParam(':quota', $_POST['quota_gb']);
+        $stmt->bindParam(':quota', $quota_gb);
         $stmt->bindParam(':duration', $_POST['duration_days']);
         $stmt->bindParam(':status', $_POST['status']);
 
         if ($stmt->execute()) {
-            $success_message = "Package successfully created!";
+            // FIX RELOAD BUG: Redirect to packages list instead of just showing message
+            header("Location: admin.php?page=packages&msg=created");
+            exit; // Stop execution to prevent form resubmission
         }
     }
 }
