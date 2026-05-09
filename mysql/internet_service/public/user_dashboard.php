@@ -31,6 +31,11 @@ $invQuery = "SELECT * FROM invoices WHERE user_id = :uid ORDER BY created_at DES
 $stmtInv = $db->prepare($invQuery);
 $stmtInv->execute([':uid' => $user_id]);
 $invoice = $stmtInv->fetch(PDO::FETCH_ASSOC);
+
+// 🔥 নোটিফিকেশন আনা (Expiry Warning)
+$notifQuery = $db->prepare("SELECT message FROM notifications WHERE user_id = :uid ORDER BY sent_at DESC LIMIT 1");
+$notifQuery->execute([':uid' => $user_id]);
+$notification = $notifQuery->fetch(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -56,6 +61,17 @@ $invoice = $stmtInv->fetch(PDO::FETCH_ASSOC);
     </nav>
 
     <div class="container mx-auto max-w-6xl py-10 px-4">
+        
+        <?php if($notification): ?>
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm flex items-start">
+                <i class="fa fa-bell text-xl mr-3 mt-1 animate-pulse"></i>
+                <div>
+                    <h4 class="font-bold">Important Notice!</h4>
+                    <p class="text-sm"><?php echo htmlspecialchars($notification['message']); ?></p>
+                </div>
+            </div>
+        <?php endif; ?>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
             <div class="lg:col-span-2">

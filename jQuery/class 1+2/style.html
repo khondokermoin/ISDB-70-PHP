@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./jquery-4.0.0.min.js"></script>
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script> -->
+</head>
+<body>
+    <style>
+
+
+        .fu{
+            background-color: aqua;
+            color: #000;
+        }
+        .fuu{
+            background-color: rgb(3, 48, 48);
+            color: #f85050;
+        }
+    </style>
+    
+
+    <p >Lorem ipsum dolor, sit amet consectetur adipisicing elit. Impedit modi sunt eaque error aperiam maxime nemo officia nisi accusamus. Temporibus error exercitationem enim vel, tempora id odit veritatis velit cum.</p>
+    <button id="fmm">Click</button>
+    <button id="fmmm">Click</button>
+
+    <script>
+
+        $('#fmm').click(function(){
+            $('p').addClass('fu');
+            $('p').toggleClass('fuu');
+            
+
+        })
+        $('#fmmm').click(function(){
+            
+            $('p').removeClass('fuu');
+
+        })
+
+
+    
+    </script>
+</body>
+</html>

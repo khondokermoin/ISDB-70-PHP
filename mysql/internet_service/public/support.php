@@ -133,9 +133,12 @@ include '../views/layouts/header.php';
                                 <div class="p-5 border border-gray-100 rounded-lg hover:shadow-md transition bg-gray-50">
                                     <div class="flex justify-between items-start mb-2">
                                         <h4 class="font-bold text-gray-800 text-lg"><?php echo htmlspecialchars($ticket['subject']); ?></h4>
-                                        <span class="px-3 py-1 rounded-full text-xs font-bold border <?php echo $statusClass; ?>">
-                                            <i class="fa <?php echo $iconClass; ?> mr-1"></i> <?php echo strtoupper($ticket['status']); ?>
-                                        </span>
+                                        <div class="flex items-center space-x-3">
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold border <?php echo $statusClass; ?>">
+                                                <i class="fa <?php echo $iconClass; ?> mr-1"></i> <?php echo strtoupper($ticket['status']); ?>
+                                            </span>
+                                            <a href="view_ticket.php?id=<?php echo $ticket['ticket_id']; ?>" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-xs font-bold transition shadow-sm">View Thread</a>
+                                        </div>
                                     </div>
                                     <div class="text-sm text-gray-500 mb-3 space-x-4">
                                         <span><i class="fa fa-tag mr-1"></i> <?php echo htmlspecialchars($ticket['category']); ?></span>

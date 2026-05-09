@@ -6,6 +6,8 @@ require_once '../config/database.php';
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] === 'admin') {
         header("Location: admin.php");
+    } elseif ($_SESSION['role'] === 'staff') {
+        header("Location: staff_dashboard.php");
     } else {
         header("Location: user_dashboard.php");
     }
@@ -34,6 +36,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Role অনুযায়ী রিডাইরেক্ট
             if ($user['role'] === 'admin') {
                 header("Location: admin.php");
+            } elseif ($user['role'] === 'staff') {
+                header("Location: staff_dashboard.php");
             } else {
                 header("Location: user_dashboard.php");
             }

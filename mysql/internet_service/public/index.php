@@ -24,7 +24,14 @@ include '../views/layouts/header.php';
             <a href="#packages" class="bg-amberRed hover:bg-red-700 text-white font-bold py-3 px-8 rounded shadow-lg transition transform hover:-translate-y-1">View Our Packages</a>
 
             <?php if (isset($_SESSION['user_id'])): ?>
-                <?php $dashboard_url = ($_SESSION['role'] === 'admin') ? 'admin.php' : 'user_dashboard.php'; ?>
+                <?php 
+                    // Safe Check for Roles
+                    $dashboard_url = 'user_dashboard.php'; // Default fallback
+                    if (isset($_SESSION['role'])) {
+                        if ($_SESSION['role'] === 'admin') $dashboard_url = 'admin.php';
+                        elseif ($_SESSION['role'] === 'staff') $dashboard_url = 'staff_dashboard.php';
+                    }
+                ?>
                 <a href="<?php echo $dashboard_url; ?>" class="bg-transparent border-2 border-white hover:bg-white hover:text-gray-900 text-white font-bold py-3 px-8 rounded shadow-lg transition transform hover:-translate-y-1">
                     <i class="fa fa-tachometer-alt mr-2"></i> Go to Dashboard
                 </a>

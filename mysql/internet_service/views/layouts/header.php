@@ -65,9 +65,16 @@
                 <a href="#" class="hover:text-amberRed transition">Hosting</a>
                 <a href="#" class="hover:text-amberRed transition">Support</a>
 
-                <?php if (isset($_SESSION['user_id'])): ?>
-                    <?php $dashboard_url = ($_SESSION['role'] === 'admin') ? 'admin.php' : 'user_dashboard.php'; ?>
-                    <a href="<?php echo $dashboard_url; ?>" class="bg-amberRed text-white px-5 py-2 rounded-full hover:bg-red-700 transition shadow-md">Dashboard</a>
+                <?php if(isset($_SESSION['user_id'])): ?>
+                    <?php 
+                        // Safe Check for Roles
+                        $nav_dashboard_url = 'user_dashboard.php'; // Default fallback
+                        if (isset($_SESSION['role'])) {
+                            if ($_SESSION['role'] === 'admin') $nav_dashboard_url = 'admin.php';
+                            elseif ($_SESSION['role'] === 'staff') $nav_dashboard_url = 'staff_dashboard.php';
+                        }
+                    ?>
+                    <a href="<?php echo $nav_dashboard_url; ?>" class="bg-amberRed text-white px-5 py-2 rounded-full hover:bg-red-700 transition shadow-md">Dashboard</a>
                 <?php else: ?>
                     <a href="login.php" class="bg-gray-800 text-white px-5 py-2 rounded-full hover:bg-amberRed transition shadow-md"><i class="fa fa-user mr-2"></i> Login</a>
                 <?php endif; ?>

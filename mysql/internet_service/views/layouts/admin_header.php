@@ -31,7 +31,11 @@ $currentPage = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
             </a>
 
             <a href="admin.php?page=users" class="flex items-center px-4 py-3 rounded-lg transition <?php echo ($currentPage == 'users') ? 'bg-gray-800 text-white border-l-4 border-red-500' : 'text-gray-400 hover:bg-gray-800 hover:text-white'; ?>">
-                <i class="fa fa-users w-6"></i> Users
+                <i class="fa fa-users w-6"></i> Manage Customers
+            </a>
+            
+            <a href="admin.php?page=staff" class="flex items-center px-4 py-3 rounded-lg transition <?php echo ($currentPage == 'staff') ? 'bg-gray-800 text-white border-l-4 border-red-500' : 'text-gray-400 hover:bg-gray-800 hover:text-white'; ?>">
+                <i class="fa fa-user-tie w-6"></i> Manage Staff
             </a>
 
             <a href="admin.php?page=billings" class="flex items-center px-4 py-3 rounded-lg transition <?php echo ($currentPage == 'billings') ? 'bg-gray-800 text-white border-l-4 border-red-500' : 'text-gray-400 hover:bg-gray-800 hover:text-white'; ?>">

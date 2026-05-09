@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 09, 2026 at 04:07 AM
+-- Generation Time: May 09, 2026 at 09:21 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -45,8 +45,9 @@ CREATE TABLE `invoices` (
 --
 
 INSERT INTO `invoices` (`invoice_id`, `user_id`, `subscription_id`, `invoice_number`, `period_start`, `period_end`, `amount`, `due_date`, `status`, `created_at`) VALUES
-(2, 2, 2, 'INV-69FC3B74BACE0', '2026-05-07', '2026-06-06', 3000.00, '2026-05-10', 'unpaid', '2026-05-07 07:12:52'),
-(3, 3, 3, 'INV-69FCD044B07ED', '2026-05-07', '2026-06-06', 4000.00, '2026-05-10', 'paid', '2026-05-07 17:47:48');
+(2, 2, 2, 'INV-69FC3B74BACE0', '2026-05-07', '2026-06-06', 3000.00, '2026-05-10', 'paid', '2026-05-07 07:12:52'),
+(3, 3, 3, 'INV-69FCD044B07ED', '2026-05-07', '2026-06-06', 4000.00, '2026-05-10', 'paid', '2026-05-07 17:47:48'),
+(4, 8, 4, 'INV-69FEBF774C568', '2026-05-09', '2026-06-08', 12000.00, '2026-05-12', 'paid', '2026-05-09 05:00:39');
 
 -- --------------------------------------------------------
 
@@ -132,6 +133,14 @@ CREATE TABLE `payments` (
   `paid_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `payments`
+--
+
+INSERT INTO `payments` (`payment_id`, `invoice_id`, `user_id`, `amount`, `method`, `transaction_ref`, `paid_at`) VALUES
+(1, 4, 8, 12000.00, 'Cash/Manual', 'ADMIN-APPROVED', '2026-05-09 06:01:28'),
+(2, 2, 2, 3000.00, 'Cash/Manual', 'ADMIN-APPROVED', '2026-05-09 06:13:29');
+
 -- --------------------------------------------------------
 
 --
@@ -165,7 +174,8 @@ CREATE TABLE `subscriptions` (
 
 INSERT INTO `subscriptions` (`subscription_id`, `user_id`, `package_id`, `start_date`, `end_date`, `status`) VALUES
 (2, 2, 17, NULL, NULL, 'pending'),
-(3, 3, 18, NULL, NULL, 'pending');
+(3, 3, 18, NULL, NULL, 'pending'),
+(4, 8, 21, '2026-05-09', '2026-06-08', 'active');
 
 -- --------------------------------------------------------
 
@@ -189,7 +199,9 @@ CREATE TABLE `tickets` (
 --
 
 INSERT INTO `tickets` (`ticket_id`, `user_id`, `subject`, `category`, `message`, `status`, `assigned_to`, `created_at`) VALUES
-(1, 3, 'internet issue', 'Slow Speed', 'your internate not good', 'resolved', NULL, '2026-05-07 20:16:53');
+(1, 3, 'internet issue', 'Slow Speed', 'your internate not good', 'resolved', 5, '2026-05-07 20:16:53'),
+(2, 3, 'Billing Problem', 'Billing Issue', 'I have payed my bill', 'processing', 7, '2026-05-09 04:39:15'),
+(3, 8, 'Billing Problem', 'Billing Issue', 'please first aprouve my billing', 'resolved', 7, '2026-05-09 05:01:20');
 
 -- --------------------------------------------------------
 
@@ -205,6 +217,13 @@ CREATE TABLE `ticket_replies` (
   `replied_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `ticket_replies`
+--
+
+INSERT INTO `ticket_replies` (`reply_id`, `ticket_id`, `user_id`, `message`, `replied_at`) VALUES
+(1, 1, 4, 'sir\r\nyour problem is solved.', '2026-05-09 03:37:59');
+
 -- --------------------------------------------------------
 
 --
@@ -217,7 +236,7 @@ CREATE TABLE `users` (
   `full_name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `role` enum('admin','customer') DEFAULT 'customer',
+  `role` enum('admin','customer','staff') DEFAULT 'customer',
   `phone` varchar(50) DEFAULT NULL,
   `address` text DEFAULT NULL,
   `status` varchar(50) DEFAULT 'active',
@@ -231,7 +250,11 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`user_id`, `role_id`, `full_name`, `email`, `password_hash`, `role`, `phone`, `address`, `status`, `created_at`) VALUES
 (2, NULL, 'BALA CHOWDHURY', 'khondokermoin2k23@gmail.com', '$2y$10$pGJpXQ0IFFxWsIzc.omqveTbYYSMenMDEdn7GbEtruj3XF5nS86gG', 'customer', '01647615608', '01/C, Charakghata, Talli Office Road, Jhagatola, Hazaribagh', 'active', '2026-05-07 07:12:52'),
 (3, NULL, 'Khondoker Mirad', 'khondoker-78dse@dipti.com.bd', '$2y$10$tHywyOYhPB1Z0oYSZuc6E.ieqpjsI9pNhr3xTBkAuOTRor1.2h1F.', 'customer', '01647615608', 'Talli Office 1/C, Dhanmondi 15', 'active', '2026-05-07 17:47:48'),
-(4, NULL, 'Khondoker Moin Hossain', 'admin@amarit.com', '$2y$10$JaCY6PCN1vPHlwsLfeErMesRFggmyoC1Rxh7z8w4.Cq8D9eLZ0erm', 'admin', '01711000000', 'Jigatola, Dhaka', 'active', '2026-05-07 19:28:48');
+(4, NULL, 'Khondoker Moin Hossain', 'admin@amarit.com', '$2y$10$JaCY6PCN1vPHlwsLfeErMesRFggmyoC1Rxh7z8w4.Cq8D9eLZ0erm', 'admin', '01711000000', 'Jigatola, Dhaka', 'active', '2026-05-07 19:28:48'),
+(5, NULL, 'Rahim (Field Tech)', 'rahim@amarit.com', '$2y$10$JaCY6PCN1vPHlwsLfeErMesRFggmyoC1Rxh7z8w4.Cq8D9eLZ0erm', 'staff', '01711111111', 'Dhaka Area, Dhaka', 'active', '2026-05-09 04:05:23'),
+(6, NULL, 'Karim (Network Eng)', 'karim@amarit.com', '$2y$10$JaCY6PCN1vPHlwsLfeErMesRFggmyoC1Rxh7z8w4.Cq8D9eLZ0erm', 'staff', '01722222222', 'Dhaka Area', 'active', '2026-05-09 04:05:23'),
+(7, NULL, 'Salam (Billing Mgr)', 'salam@amarit.com', '$2y$10$JaCY6PCN1vPHlwsLfeErMesRFggmyoC1Rxh7z8w4.Cq8D9eLZ0erm', 'staff', '01733333333', 'Dhaka Area', 'active', '2026-05-09 04:05:23'),
+(8, NULL, 'Rafin', 'rafin@gmail.com', '$2y$10$Eti1mVuJQxgjxpf8s81MHeHwI7zLdoVMEmcjEh39alTn6/bhg3py6', 'customer', '01868457336', '01/C, Charakghata, Talli Office Road, Jhagatola, Hazaribagh', 'active', '2026-05-09 05:00:39');
 
 --
 -- Indexes for dumped tables
@@ -321,7 +344,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `invoices`
 --
 ALTER TABLE `invoices`
-  MODIFY `invoice_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `invoice_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `network_logs`
@@ -345,7 +368,7 @@ ALTER TABLE `packages`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `roles`
@@ -357,25 +380,25 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT for table `subscriptions`
 --
 ALTER TABLE `subscriptions`
-  MODIFY `subscription_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `subscription_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `tickets`
 --
 ALTER TABLE `tickets`
-  MODIFY `ticket_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `ticket_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `ticket_replies`
 --
 ALTER TABLE `ticket_replies`
-  MODIFY `reply_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `reply_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- Constraints for dumped tables
