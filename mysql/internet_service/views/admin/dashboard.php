@@ -1,4 +1,5 @@
-<?php 
+<?php
+
 /** @var PDO $db */
 
 // ১. ডাটাবেস থেকে ড্যাশবোর্ডের জন্য রিয়েল-টাইম ডেটা আনা হচ্ছে
@@ -33,7 +34,7 @@ $openTickets = $db->query("SELECT COUNT(*) FROM tickets WHERE status='open'")->f
 
 <!-- Stats Grid (Top row) -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-    
+
     <!-- Users Card -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center border-l-4 border-blue-500 hover:shadow-md transition">
         <div class="bg-blue-100 text-blue-600 p-4 rounded-lg mr-4">
@@ -81,7 +82,7 @@ $openTickets = $db->query("SELECT COUNT(*) FROM tickets WHERE status='open'")->f
 
 <!-- Bottom Section: Grid for Packages & Quick Actions -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    
+
     <!-- Packages Summary -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div class="flex justify-between items-center mb-4">
@@ -108,15 +109,15 @@ $openTickets = $db->query("SELECT COUNT(*) FROM tickets WHERE status='open'")->f
                 <i class="fa fa-plus-circle text-red-500 text-xl mb-2"></i>
                 <span class="text-sm font-semibold">New Package</span>
             </a>
-            <a href="#" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 py-3 px-4 rounded-lg text-center transition flex flex-col items-center justify-center">
+            <a href="admin.php?page=users" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 py-3 px-4 rounded-lg text-center transition flex flex-col items-center justify-center">
                 <i class="fa fa-user-plus text-blue-500 text-xl mb-2"></i>
-                <span class="text-sm font-semibold">Add User</span>
+                <span class="text-sm font-semibold">Manage Users</span>
             </a>
-            <a href="#" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 py-3 px-4 rounded-lg text-center transition flex flex-col items-center justify-center">
+            <a href="admin.php?page=billings" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 py-3 px-4 rounded-lg text-center transition flex flex-col items-center justify-center">
                 <i class="fa fa-file-invoice text-orange-500 text-xl mb-2"></i>
-                <span class="text-sm font-semibold">Generate Invoice</span>
+                <span class="text-sm font-semibold">Billings</span>
             </a>
-            <a href="#" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 py-3 px-4 rounded-lg text-center transition flex flex-col items-center justify-center">
+            <a href="admin.php?page=tickets" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 py-3 px-4 rounded-lg text-center transition flex flex-col items-center justify-center">
                 <i class="fa fa-ticket-alt text-purple-500 text-xl mb-2"></i>
                 <span class="text-sm font-semibold">View Tickets</span>
             </a>

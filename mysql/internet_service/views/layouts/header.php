@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Amar IT</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Optional: Tailwind Custom Configuration for Brand Colors -->
     <script>
         tailwind.config = {
@@ -25,6 +26,7 @@
         }
     </script>
 </head>
+
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
     <!-- Top-Bar START -->
@@ -54,14 +56,21 @@
             <a href="index.php" class="text-3xl font-extrabold text-amberRed tracking-tight">
                 AMAR <span class="text-gray-800">IT</span>
             </a>
-            
+
             <!-- Desktop Menu -->
-            <nav class="hidden md:flex space-x-6 font-semibold text-gray-600">
+            <nav class="hidden md:flex space-x-6 font-semibold text-gray-600 items-center">
                 <a href="#" class="hover:text-amberRed transition">Home Internet</a>
                 <a href="corporate.php" class="hover:text-amberRed transition">Corporate</a>
                 <a href="#" class="hover:text-amberRed transition">IPTSP</a>
                 <a href="#" class="hover:text-amberRed transition">Hosting</a>
                 <a href="#" class="hover:text-amberRed transition">Support</a>
+
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <?php $dashboard_url = ($_SESSION['role'] === 'admin') ? 'admin.php' : 'user_dashboard.php'; ?>
+                    <a href="<?php echo $dashboard_url; ?>" class="bg-amberRed text-white px-5 py-2 rounded-full hover:bg-red-700 transition shadow-md">Dashboard</a>
+                <?php else: ?>
+                    <a href="login.php" class="bg-gray-800 text-white px-5 py-2 rounded-full hover:bg-amberRed transition shadow-md"><i class="fa fa-user mr-2"></i> Login</a>
+                <?php endif; ?>
             </nav>
 
             <!-- Mobile Menu Button -->
