@@ -30,6 +30,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ':cat' => $category,
                 ':msg' => $message
             ]);
+
+            // 🔥 কাস্টমার নতুন টিকিট খুললে অ্যাডমিনকে নোটিফিকেশন পাঠানো
+            $adminQuery = $db->query("SELECT user_id FROM users WHERE role = 'admin' LIMIT 1")->fetch();
+            if ($adminQuery) {
+                $notif_msg = "🎫 Support Alert: A customer has opened a new ticket regarding '{$category}'. Please assign a staff member.";
+                $db->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)")->execute([$adminQuery['user_id'], $notif_msg]);
+            }
+
             $success_message = "Your support ticket has been submitted successfully! We will contact you soon.";
         } catch (PDOException $e) {
             error_log($e->getMessage());

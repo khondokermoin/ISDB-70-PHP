@@ -62,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $db->beginTransaction();
 
         $password_hash = password_hash($password, PASSWORD_DEFAULT);
-        $userQuery = "INSERT INTO users (full_name, email, password_hash, phone, address, status) VALUES (:name, :email, :pass, :phone, :address, 'active')";
+        $userQuery = "INSERT INTO users (full_name, email, password_hash, role, phone, address, status) VALUES (:name, :email, :pass, 'customer', :phone, :address, 'active')";
         $stmtUser = $db->prepare($userQuery);
         $stmtUser->execute([
             ':name' => $full_name,
@@ -81,7 +81,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         ]);
         $subscription_id = $db->lastInsertId();
 
-        $invoice_no = "INV-" . strtoupper(uniqid()); 
+        $invoice_no = "INV-" . strtoupper(uniqid());
         $invQuery = "INSERT INTO invoices (user_id, subscription_id, invoice_number, period_start, period_end, amount, due_date, status) VALUES (:uid, :sid, :inv_no, CURDATE(), DATE_ADD(CURDATE(), INTERVAL :days DAY), :amount, DATE_ADD(CURDATE(), INTERVAL 3 DAY), 'unpaid')";
         $stmtInv = $db->prepare($invQuery);
         $stmtInv->execute([
@@ -93,23 +93,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         ]);
 
         $db->commit();
-        
-        // Session Security (Security Update)
+
+        // 🔥 MAGIC: Admin Notification (নতুন কাস্টমার আসলে অ্যাডমিনকে জানানো)
+        $adminQuery = $db->query("SELECT user_id FROM users WHERE role = 'admin' LIMIT 1")->fetch();
+        if ($adminQuery) {
+            $notif_msg = "🔥 New Order: " . $full_name . " has requested a new internet connection. Please assign a technician from 'Manage Customers'.";
+            $db->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)")->execute([$adminQuery['user_id'], $notif_msg]);
+        }
+
+        // Session Security & Fix
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user_id;
         $_SESSION['user_name'] = $full_name;
-        
+        $_SESSION['role'] = 'customer'; // 🔥 BUG FIX: Role সেট করা হলো যাতে Chat Setup এ আর ঝামেলা না হয়!
+
         header("Location: user_dashboard.php");
         exit;
-
     } catch (PDOException $e) {
         // Hide Raw Database Errors (Security Update)
         if ($db->inTransaction()) {
-            $db->rollBack(); 
+            $db->rollBack();
         }
-        error_log($e->getMessage()); // লগে সেভ হবে কিন্তু ইউজার দেখবে না
+        error_log($e->getMessage());
         $error_message = "Something went wrong. Please try again.";
-
     } catch (Exception $e) {
         // Validation Errors (Custom Messages)
         $error_message = $e->getMessage();
@@ -121,14 +127,14 @@ include '../views/layouts/header.php';
 
 <section class="py-12 bg-gray-50 min-h-screen">
     <div class="container mx-auto max-w-5xl px-4">
-        
+
         <div class="text-center mb-10">
             <h2 class="text-3xl font-bold text-gray-800">Complete Your Order</h2>
             <div class="w-16 h-1 bg-amberRed mx-auto mt-4"></div>
         </div>
 
         <div class="flex flex-col md:flex-row gap-8">
-            
+
             <div class="w-full md:w-1/3">
                 <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden sticky top-24">
                     <div class="bg-gray-800 text-white p-6 text-center">
@@ -148,7 +154,7 @@ include '../views/layouts/header.php';
                             <span class="text-gray-600">Duration</span>
                             <span class="font-bold text-gray-800"><?php echo $package['duration_days']; ?> Days</span>
                         </div>
-                        
+
                         <div class="flex justify-between mt-6 pt-4 border-t-2 border-gray-300">
                             <span class="text-lg font-bold text-gray-800">Total Payable</span>
                             <span class="text-2xl font-extrabold text-amberRed">৳<?php echo number_format($package['price']); ?></span>
@@ -160,8 +166,8 @@ include '../views/layouts/header.php';
             <div class="w-full md:w-2/3">
                 <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
                     <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Customer Details</h3>
-                    
-                    <?php if($error_message): ?>
+
+                    <?php if ($error_message): ?>
                         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
                             <i class="fa fa-exclamation-circle mr-2"></i> <?php echo htmlspecialchars($error_message); ?>
                         </div>
@@ -173,7 +179,7 @@ include '../views/layouts/header.php';
                                 <label class="block text-gray-700 font-medium mb-2">Full Name <span class="text-red-500">*</span></label>
                                 <input type="text" name="full_name" required placeholder="John Doe" value="<?php echo isset($_POST['full_name']) ? htmlspecialchars($_POST['full_name']) : ''; ?>" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amberRed outline-none">
                             </div>
-                            
+
                             <div class="col-span-2 md:col-span-1">
                                 <label class="block text-gray-700 font-medium mb-2">Mobile Number <span class="text-red-500">*</span></label>
                                 <input type="text" name="phone" required placeholder="01XXXXXXXXX" value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amberRed outline-none">

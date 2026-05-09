@@ -32,6 +32,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['user_name'] = $user['full_name'];
             $_SESSION['role'] = $user['role'];
+            // 🔥 পদবি (Designation) সেশনে সেভ করা হলো
+            $_SESSION['designation'] = isset($user['designation']) ? $user['designation'] : '';
 
             // Role অনুযায়ী রিডাইরেক্ট
             if ($user['role'] === 'admin') {

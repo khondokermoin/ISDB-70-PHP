@@ -1,6 +1,6 @@
 <?php
 session_start();
-// ইউজার লগইন করা না থাকলে হোমপেজে পাঠিয়ে দেবে
+// ইউজার লগইন করা না থাকলে হোমপেজে পাঠিয়ে দেবে
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit;
@@ -17,6 +17,11 @@ $stmtUser = $db->prepare($userQuery);
 $stmtUser->execute([':uid' => $user_id]);
 $user = $stmtUser->fetch(PDO::FETCH_ASSOC);
 
+// সেশনে 'role' মিসিং থাকলে ডাটাবেস থেকে অটোমেটিক বসিয়ে দেবে
+if (!isset($_SESSION['role']) && $user) {
+    $_SESSION['role'] = $user['role'];
+}
+
 // কাস্টমারের বর্তমান প্যাকেজ এবং সাবস্ক্রিপশন তথ্য আনা
 $query = "SELECT s.*, p.name as package_name, p.speed_mbps, p.price 
           FROM subscriptions s 
@@ -26,16 +31,31 @@ $stmt = $db->prepare($query);
 $stmt->execute([':uid' => $user_id]);
 $sub = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// ইনভয়েস বা পেমেন্ট স্ট্যাটাস আনা
-$invQuery = "SELECT * FROM invoices WHERE user_id = :uid ORDER BY created_at DESC LIMIT 1";
-$stmtInv = $db->prepare($invQuery);
-$stmtInv->execute([':uid' => $user_id]);
-$invoice = $stmtInv->fetch(PDO::FETCH_ASSOC);
+// 🔥 আপডেট ১: শুধুমাত্র বকেয়া (Unpaid) ইনভয়েস আনা
+$unpaidInvQuery = "SELECT * FROM invoices WHERE user_id = :uid AND status IN ('unpaid', 'pending') ORDER BY created_at DESC";
+$stmtUnpaid = $db->prepare($unpaidInvQuery);
+$stmtUnpaid->execute([':uid' => $user_id]);
+$unpaid_invoices = $stmtUnpaid->fetchAll(PDO::FETCH_ASSOC);
 
-// 🔥 নোটিফিকেশন আনা (Expiry Warning)
+// 🔥 আপডেট ২: সব ইনভয়েস হিস্ট্রি আনা (Payment History এর জন্য)
+$allInvQuery = "SELECT * FROM invoices WHERE user_id = :uid ORDER BY created_at DESC";
+$stmtAll = $db->prepare($allInvQuery);
+$stmtAll->execute([':uid' => $user_id]);
+$invoice_history = $stmtAll->fetchAll(PDO::FETCH_ASSOC);
+
+// নোটিফিকেশন আনা (Expiry Warning)
 $notifQuery = $db->prepare("SELECT message FROM notifications WHERE user_id = :uid ORDER BY sent_at DESC LIMIT 1");
 $notifQuery->execute([':uid' => $user_id]);
 $notification = $notifQuery->fetch(PDO::FETCH_ASSOC);
+
+// কাস্টমারের জন্য অ্যাসাইন করা টেকনিশিয়ান খোঁজা (সর্বশেষ রানিং টিকিট থেকে)
+$techQuery = $db->prepare("SELECT t.ticket_id, t.category, s.full_name as staff_name, s.phone as staff_phone 
+                           FROM tickets t 
+                           JOIN users s ON t.assigned_to = s.user_id 
+                           WHERE t.user_id = :uid AND t.status != 'resolved' 
+                           ORDER BY t.created_at DESC LIMIT 1");
+$techQuery->execute([':uid' => $user_id]);
+$assigned_tech = $techQuery->fetch(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -61,8 +81,8 @@ $notification = $notifQuery->fetch(PDO::FETCH_ASSOC);
     </nav>
 
     <div class="container mx-auto max-w-6xl py-10 px-4">
-        
-        <?php if($notification): ?>
+
+        <?php if ($notification): ?>
             <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm flex items-start">
                 <i class="fa fa-bell text-xl mr-3 mt-1 animate-pulse"></i>
                 <div>
@@ -93,15 +113,20 @@ $notification = $notifQuery->fetch(PDO::FETCH_ASSOC);
                             </div>
                         </div>
 
+
                         <div class="mt-8 bg-gray-50 border border-gray-200 p-5 rounded-lg">
                             <p class="text-gray-600 font-semibold mb-2">Expiry Information:</p>
                             <?php if ($sub['status'] == 'active' && !empty($sub['end_date'])):
-                                $days_left = (strtotime($sub['end_date']) - time()) / (60 * 60 * 24);
+                                // 🔥 দিনের সঠিক ক্যালকুলেশন (Date Object ব্যবহার করে)
+                                $today = new DateTime(date('Y-m-d'));
+                                $expiry = new DateTime($sub['end_date']);
+                                $interval = $today->diff($expiry);
+                                $days_left = $interval->format('%r%a'); // পজিটিভ বা নেগেটিভ দিন বের করবে
                             ?>
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm text-gray-600">Valid Until: <strong><?php echo date("d M Y", strtotime($sub['end_date'])); ?></strong></span>
                                     <span class="text-xl font-extrabold <?php echo ($days_left <= 3) ? 'text-red-600' : 'text-green-600'; ?>">
-                                        <?php echo max(0, ceil($days_left)); ?> Days Remaining
+                                        <?php echo ($days_left > 0) ? $days_left . ' Days Remaining' : 'Expired'; ?>
                                     </span>
                                 </div>
                             <?php else: ?>
@@ -112,6 +137,43 @@ $notification = $notifQuery->fetch(PDO::FETCH_ASSOC);
                             <?php endif; ?>
                         </div>
 
+                        <?php if ($assigned_tech): ?>
+                            <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 mt-6 shadow-sm">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center">
+                                        <div class="bg-blue-200 text-blue-700 w-12 h-12 rounded-full flex items-center justify-center text-xl mr-4 shadow-inner">
+                                            <i class="fa <?php echo ($assigned_tech['category'] == 'New Installation') ? 'fa-tools' : 'fa-user-shield'; ?>"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">
+                                                <?php echo ($assigned_tech['category'] == 'New Installation') ? 'Installation Technician' : 'Support Assistant'; ?>
+                                            </p>
+                                            <p class="text-lg font-extrabold text-gray-800"><?php echo htmlspecialchars($assigned_tech['staff_name']); ?></p>
+                                            <p class="text-xs text-gray-500 font-semibold"><i class="fa fa-info-circle mr-1"></i> Assigned for: <?php echo htmlspecialchars($assigned_tech['category']); ?></p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex space-x-3 mt-4 pt-4 border-t border-blue-200">
+                                    <a href="tel:<?php echo htmlspecialchars($assigned_tech['staff_phone']); ?>" class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold shadow transition text-sm">
+                                        <i class="fa fa-phone-alt mr-1"></i> Call
+                                    </a>
+                                    <a href="https://wa.me/88<?php echo htmlspecialchars($assigned_tech['staff_phone']); ?>" target="_blank" class="flex-1 text-center bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-bold shadow transition text-sm">
+                                        <i class="fab fa-whatsapp text-lg mr-1"></i> WhatsApp
+                                    </a>
+                                    <a href="view_ticket.php?id=<?php echo $assigned_tech['ticket_id']; ?>" class="flex-1 text-center bg-gray-800 hover:bg-gray-900 text-white py-2 rounded-lg font-bold shadow transition text-sm">
+                                        <i class="fa fa-comments mr-1"></i> Chat Setup
+                                    </a>
+                                </div>
+                            </div>
+                        <?php else: ?>
+                            <?php if ($sub && $sub['status'] != 'active'): ?>
+                                <div class="mt-6 bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-400">
+                                    <i class="fa fa-user-clock mb-2 text-2xl"></i>
+                                    <p class="text-sm">Waiting for a technician to be assigned for your installation.</p>
+                                </div>
+                            <?php endif; ?>
+                        <?php endif; ?>
                         <div class="mt-6 flex space-x-4">
                             <a href="upgrade.php" class="bg-gray-800 text-white px-5 py-2 rounded text-sm font-semibold hover:bg-black transition"><i class="fa fa-arrow-up mr-2"></i> Upgrade Plan</a>
                             <a href="support.php" class="border border-gray-300 text-gray-700 px-5 py-2 rounded text-sm font-semibold hover:bg-gray-100 transition"><i class="fa fa-headset mr-2"></i> Support Ticket</a>
@@ -121,27 +183,70 @@ $notification = $notifQuery->fetch(PDO::FETCH_ASSOC);
                     <?php endif; ?>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 border-t-4 border-t-blue-500">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa fa-file-invoice-dollar text-blue-500 mr-2"></i> Latest Invoice</h3>
-                    <?php if ($invoice): ?>
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <p class="text-sm text-gray-500 mb-1">Invoice No: <strong><?php echo htmlspecialchars($invoice['invoice_number']); ?></strong></p>
-                                <p class="text-3xl font-extrabold text-gray-800">৳<?php echo number_format($invoice['amount']); ?></p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-sm text-gray-500 mb-2">Due Date: <strong><?php echo date("d M Y", strtotime($invoice['due_date'])); ?></strong></p>
-                                <?php if ($invoice['status'] == 'unpaid'): ?>
-                                    <a href="pay.php?id=<?php echo $invoice['invoice_id']; ?>" class="bg-green-600 text-white px-8 py-2 rounded-full font-bold shadow hover:bg-green-700 transition inline-block">PAY NOW</a>
-                                <?php else: ?>
-                                    <span class="text-green-600 font-bold bg-green-50 px-4 py-2 rounded border border-green-200"><i class="fa fa-check-circle mr-1"></i> PAID</span>
-                                <?php endif; ?>
-                            </div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8 border-t-4 border-t-orange-500">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa fa-exclamation-circle text-orange-500 mr-2"></i> Pending Payments</h3>
+                    <?php if (count($unpaid_invoices) > 0): ?>
+                        <div class="space-y-4 max-h-[250px] overflow-y-auto pr-2">
+                            <?php foreach ($unpaid_invoices as $inv): ?>
+                                <div class="p-4 bg-orange-50 border border-orange-200 rounded-lg relative overflow-hidden">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-[10px] font-bold text-gray-500 uppercase">INV: <?php echo $inv['invoice_number']; ?></span>
+                                        <?php if ($inv['status'] == 'pending'): ?>
+                                            <span class="bg-blue-500 text-white px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">VERIFYING</span>
+                                        <?php else: ?>
+                                            <span class="bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">UNPAID</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <p class="text-2xl font-black text-gray-800">৳<?php echo number_format($inv['amount']); ?></p>
+                                    <p class="text-xs text-gray-500 mt-1 italic">Due: <?php echo date("d M Y", strtotime($inv['due_date'])); ?></p>
+
+                                    <?php if ($inv['status'] == 'pending'): ?>
+                                        <button disabled class="w-full mt-4 bg-gray-400 text-white py-2 rounded-lg text-sm font-bold shadow cursor-not-allowed"><i class="fa fa-spinner fa-spin mr-1"></i> Processing</button>
+                                    <?php else: ?>
+                                        <a href="pay_invoice.php?invoice_id=<?php echo $inv['invoice_id']; ?>" class="block text-center mt-4 bg-orange-600 text-white py-2 rounded-lg text-sm font-bold shadow hover:bg-orange-700 transition">Pay Now</a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
                     <?php else: ?>
-                        <p class="text-gray-500">No invoices generated yet.</p>
+                        <div class="text-center py-6 text-gray-400 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                            <i class="fa fa-check-circle text-4xl mb-2 text-green-300"></i>
+                            <p class="text-sm font-bold text-gray-500">All bills are cleared!</p>
+                        </div>
                     <?php endif; ?>
                 </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 border-t-4 border-t-blue-500">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa fa-history text-blue-500 mr-2"></i> Payment History</h3>
+                    <div class="overflow-x-auto max-h-[300px] overflow-y-auto">
+                        <table class="min-w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold sticky top-0">
+                                <tr>
+                                    <th class="py-3 px-4">Invoice No.</th>
+                                    <th class="py-3 px-4">Date</th>
+                                    <th class="py-3 px-4">Amount</th>
+                                    <th class="py-3 px-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <?php foreach ($invoice_history as $hist): ?>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-bold text-gray-600"><?php echo $hist['invoice_number']; ?></td>
+                                        <td class="py-3 px-4 text-gray-500"><?php echo date("d M Y", strtotime($hist['created_at'])); ?></td>
+                                        <td class="py-3 px-4 font-bold text-gray-800">৳<?php echo number_format($hist['amount']); ?></td>
+                                        <td class="py-3 px-4">
+                                            <span class="px-2 py-1 rounded text-[10px] font-bold border <?php echo ($hist['status'] == 'paid') ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200'; ?>">
+                                                <?php echo strtoupper($hist['status']); ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                <?php if (empty($invoice_history)) echo "<tr><td colspan='4' class='text-center py-6 text-gray-400 italic'>No invoice history available.</td></tr>"; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
 
             <div class="w-full">

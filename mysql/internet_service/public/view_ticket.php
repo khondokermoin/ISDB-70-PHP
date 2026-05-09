@@ -1,5 +1,6 @@
 <?php
 session_start();
+// কাস্টমার ছাড়া অন্য কেউ যেন ঢুকতে না পারে
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'customer') {
     header("Location: index.php");
     exit;
@@ -10,7 +11,7 @@ $db = (new Database())->getConnection();
 $user_id = $_SESSION['user_id'];
 $ticket_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-// Verify ticket belongs to this user AND fetch Assigned Staff info
+// টিকিট চেক করা এবং অ্যাসাইন করা স্টাফের ইনফো আনা
 $stmt = $db->prepare("
     SELECT t.*, s.full_name as staff_name, s.phone as staff_phone 
     FROM tickets t 
@@ -21,10 +22,15 @@ $stmt->execute([$ticket_id, $user_id]);
 $ticket = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$ticket) {
-    die("<div class='p-10 text-center text-red-500 font-bold text-2xl'>Ticket Not Found or Access Denied!</div>");
+    die("<div style='text-align:center; padding:50px; font-family:sans-serif;'>
+            <h1 style='color:red; font-size:40px;'>404 Error</h1>
+            <h2>Ticket Not Found!</h2>
+            <p>The ticket you are trying to view does not exist or you don't have permission.</p>
+            <a href='user_dashboard.php' style='color:blue;'>Go Back to Dashboard</a>
+         </div>");
 }
 
-// Handle Customer Reply
+// কাস্টমার মেসেজ পাঠালে তা সেভ করা
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['reply_message'])) {
     $msg = trim($_POST['reply_message']);
     if (!empty($msg) && $ticket['status'] != 'resolved') {
@@ -35,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['reply_message'])) {
     }
 }
 
-// Fetch Replies
+// চ্যাট হিস্ট্রি (আগের মেসেজগুলো) তুলে আনা
 $stmtRep = $db->prepare("SELECT r.*, u.full_name, u.role FROM ticket_replies r JOIN users u ON r.user_id = u.user_id WHERE r.ticket_id = ? ORDER BY r.replied_at ASC");
 $stmtRep->execute([$ticket_id]);
 $replies = $stmtRep->fetchAll(PDO::FETCH_ASSOC);
@@ -45,7 +51,9 @@ include '../views/layouts/header.php';
 
 <div class="bg-gray-50 min-h-screen py-10">
     <div class="container mx-auto max-w-4xl px-4">
-        <a href="support.php" class="text-blue-600 hover:underline mb-4 inline-block font-semibold"><i class="fa fa-arrow-left"></i> Back to Support</a>
+        <a href="support.php" class="text-blue-600 hover:underline mb-4 inline-block font-semibold">
+            <i class="fa fa-arrow-left"></i> Back to Support
+        </a>
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
             <div class="flex justify-between items-center mb-6 border-b pb-4">
@@ -62,16 +70,18 @@ include '../views/layouts/header.php';
                 <div class="bg-red-50 border border-red-100 rounded-xl p-5 mb-6 flex items-center justify-between shadow-sm">
                     <div class="flex items-center">
                         <div class="bg-red-100 text-red-600 w-12 h-12 rounded-full flex items-center justify-center text-xl mr-4">
-                            <i class="fa fa-user-shield"></i>
+                            <i class="fa <?php echo ($ticket['category'] == 'New Installation') ? 'fa-tools' : 'fa-user-shield'; ?>"></i>
                         </div>
                         <div>
-                            <p class="text-[10px] text-red-500 font-bold uppercase tracking-widest">Assigned Support Expert</p>
+                            <p class="text-[10px] text-red-500 font-bold uppercase tracking-widest">
+                                <?php echo ($ticket['category'] == 'New Installation') ? 'Installation Technician' : 'Support Expert'; ?>
+                            </p>
                             <p class="text-lg font-extrabold text-gray-800"><?php echo htmlspecialchars($ticket['staff_name']); ?></p>
                             <p class="text-xs text-gray-500">Handling your request</p>
                         </div>
                     </div>
                     <a href="https://wa.me/88<?php echo htmlspecialchars($ticket['staff_phone']); ?>" target="_blank" class="bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold shadow transition flex items-center">
-                        <i class="fab fa-whatsapp text-xl mr-2"></i> WhatsApp Now
+                        <i class="fab fa-whatsapp text-xl mr-2"></i> WhatsApp
                     </a>
                 </div>
             <?php else: ?>
@@ -100,7 +110,7 @@ include '../views/layouts/header.php';
                     <p class="text-gray-700 text-sm"><?php echo nl2br(htmlspecialchars($reply['message'])); ?></p>
                 </div>
             <?php endforeach; ?>
-            <?php if (empty($replies)) echo "<p class='text-gray-500 text-center text-sm py-6 border border-dashed rounded bg-gray-50'>No replies yet.</p>"; ?>
+            <?php if (empty($replies)) echo "<p class='text-gray-500 text-center text-sm py-6 border border-dashed rounded bg-gray-50'>No replies yet. Send a message below.</p>"; ?>
         </div>
 
         <?php if ($ticket['status'] != 'resolved'): ?>
@@ -111,7 +121,9 @@ include '../views/layouts/header.php';
                 </form>
             </div>
         <?php else: ?>
-            <div class="bg-green-100 text-green-700 p-4 rounded text-center border border-green-300 font-bold shadow-sm"><i class="fa fa-check-circle mr-2"></i> This issue has been marked as resolved.</div>
+            <div class="bg-green-100 text-green-700 p-4 rounded text-center border border-green-300 font-bold shadow-sm">
+                <i class="fa fa-check-circle mr-2"></i> This issue has been marked as resolved.
+            </div>
         <?php endif; ?>
     </div>
 </div>
