@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # ইউজার ডোমেইনে হিট করলে তাকে অটোমেটিক public ফোল্ডারে পাঠিয়ে দেবে
+    RewriteRule ^$ public/index.php [L]
+    
+    # অন্য সব রিকোয়েস্টকেও public ফোল্ডারের দিকে রিডাইরেক্ট করবে
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

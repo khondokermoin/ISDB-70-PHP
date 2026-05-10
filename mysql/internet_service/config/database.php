@@ -21,3 +21,20 @@ class Database {
     }
 }
 ?>
+
+<!-- MySQL 
+database name u951246149_isp_manager
+MySQL username u951246149_amarit
+Password (S47i61t56o08L)
+ -->
+
+
+
+<!-- return [
+    'app_name' => 'Gym Tracker',
+    'db_host' => 'localhost',
+    'db_name' => 'u951246149_gym_tracker',
+    'db_user' => 'u951246149_gym',
+    'db_pass' => 'S47i61t56o08L',
+    'db_charset' => 'utf8mb4',
+]; -->
