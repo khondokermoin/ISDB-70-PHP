@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 09, 2026 at 10:07 PM
+-- Generation Time: May 12, 2026 at 08:42 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,28 @@ SET time_zone = "+00:00";
 --
 -- Database: `isp_manager`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `coverage_zones`
+--
+
+CREATE TABLE `coverage_zones` (
+  `id` int(11) NOT NULL,
+  `district` varchar(100) NOT NULL,
+  `upazila` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `status` enum('active','upcoming') DEFAULT 'active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `coverage_zones`
+--
+
+INSERT INTO `coverage_zones` (`id`, `district`, `upazila`, `description`, `status`, `created_at`) VALUES
+(1, 'Dhaka', 'Dhanmondi', 'laksjdfoiauwer;lsdjfc', 'active', '2026-05-12 05:54:03');
 
 -- --------------------------------------------------------
 
@@ -78,6 +100,13 @@ CREATE TABLE `invoices` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `invoices`
+--
+
+INSERT INTO `invoices` (`invoice_id`, `user_id`, `subscription_id`, `invoice_number`, `period_start`, `period_end`, `amount`, `due_date`, `status`, `created_at`) VALUES
+(11, 20, 10, 'INV-6A02C2F66A402', '2026-05-12', '2026-06-11', 500.00, '2026-05-15', 'unpaid', '2026-05-12 06:04:38');
+
 -- --------------------------------------------------------
 
 --
@@ -113,16 +142,17 @@ CREATE TABLE `notifications` (
 --
 
 INSERT INTO `notifications` (`notification_id`, `user_id`, `type`, `message`, `is_read`, `sent_at`) VALUES
-(1, 4, NULL, '🔥 New Order: Ibrahim has requested a new internet connection. Please assign a technician from \'Manage Customers\'.', 0, '2026-05-09 17:35:26'),
-(2, 13, NULL, '🚨 New Job: You have been assigned for a New Connection Setup (Customer ID: #19). Please check your pending tasks.', 0, '2026-05-09 17:36:17'),
-(3, 4, NULL, '✅ Job Completed: Ticket #10 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 0, '2026-05-09 17:36:51'),
-(4, 4, NULL, '✅ Job Completed: Ticket #9 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 0, '2026-05-09 17:37:08'),
-(5, 4, NULL, '🚀 Upgrade Request: A customer requested to upgrade to BASIC+. Please check Support Tickets.', 0, '2026-05-09 18:09:25'),
-(6, 4, NULL, '✅ Job Completed: Ticket #11 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 0, '2026-05-09 18:26:14'),
-(7, 4, NULL, '🚀 Upgrade & Invoice: Ibrahim requested to upgrade to POSITIVE+. New invoice generated.', 0, '2026-05-09 18:26:44'),
-(8, 4, NULL, '✅ Job Completed: Ticket #12 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 0, '2026-05-09 18:28:04'),
-(9, 4, NULL, '💰 Payment Submitted: TrxID pouy9654783214 received for INV-69FF68B7E7ACB. Check Support Tickets to verify.', 0, '2026-05-09 19:04:29'),
-(10, 4, NULL, '✅ Job Completed: Ticket #13 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 0, '2026-05-09 19:05:31');
+(1, 4, NULL, '🔥 New Order: Ibrahim has requested a new internet connection. Please assign a technician from \'Manage Customers\'.', 1, '2026-05-09 17:35:26'),
+(2, 13, NULL, '🚨 New Job: You have been assigned for a New Connection Setup (Customer ID: #19). Please check your pending tasks.', 1, '2026-05-09 17:36:17'),
+(3, 4, NULL, '✅ Job Completed: Ticket #10 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 1, '2026-05-09 17:36:51'),
+(4, 4, NULL, '✅ Job Completed: Ticket #9 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 1, '2026-05-09 17:37:08'),
+(5, 4, NULL, '🚀 Upgrade Request: A customer requested to upgrade to BASIC+. Please check Support Tickets.', 1, '2026-05-09 18:09:25'),
+(6, 4, NULL, '✅ Job Completed: Ticket #11 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 1, '2026-05-09 18:26:14'),
+(7, 4, NULL, '🚀 Upgrade & Invoice: Ibrahim requested to upgrade to POSITIVE+. New invoice generated.', 1, '2026-05-09 18:26:44'),
+(8, 4, NULL, '✅ Job Completed: Ticket #12 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 1, '2026-05-09 18:28:04'),
+(9, 4, NULL, '💰 Payment Submitted: TrxID pouy9654783214 received for INV-69FF68B7E7ACB. Check Support Tickets to verify.', 1, '2026-05-09 19:04:29'),
+(10, 4, NULL, '✅ Job Completed: Ticket #13 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 1, '2026-05-09 19:05:31'),
+(11, 4, NULL, '🔥 New Order: KHONDOKER MOIN HOSSAIN has requested a new internet connection. Please assign a technician from \'Manage Customers\'.', 1, '2026-05-12 06:04:38');
 
 -- --------------------------------------------------------
 
@@ -205,6 +235,13 @@ CREATE TABLE `subscriptions` (
   `status` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `subscriptions`
+--
+
+INSERT INTO `subscriptions` (`subscription_id`, `user_id`, `package_id`, `start_date`, `end_date`, `status`) VALUES
+(10, 20, 1, NULL, NULL, 'pending');
+
 -- --------------------------------------------------------
 
 --
@@ -265,11 +302,18 @@ INSERT INTO `users` (`user_id`, `role_id`, `full_name`, `designation`, `email`, 
 (13, NULL, 'Rahim', 'Field Technician', 'rahim@gmail.com', '$2y$10$DC1BSU.ZRGfM7mvHDRANReEk7GcNT2Fepcb7k3wPxfWq2eifT/jzi', 'staff', '01647655555', 'Dhanmondi 15', 'active', '2026-05-09 13:01:35'),
 (14, NULL, 'Karim', 'Network Engineer', 'karim@gmail.com', '$2y$10$X.GeC7OGGp4IHAFCC5WLzOLTae/pXl2uci9ktZ6ai0nSvwMF8E9Zy', 'staff', '01647666666', 'Dhaka', 'active', '2026-05-09 13:02:23'),
 (15, NULL, 'Salam', 'Billing Manager', 'salam@gmail.com', '$2y$10$WWzWFBhclxDW9.a4BL4Xj.1ClFOw.hvx5NMd/4O6KblADD5Uv9uhq', 'staff', '01647777777', 'Dhaka', 'active', '2026-05-09 13:02:57'),
-(16, NULL, 'Rakib', 'Customer Support', 'rakib@gmail.com', '$2y$10$XaTnTtCHquc7MFxLTmozDOh5liWmqvpHUNcjK4AqT4fnOoh.8tOUS', 'staff', '01648888888', 'Dhaka', 'active', '2026-05-09 13:03:37');
+(16, NULL, 'Rakib', 'Customer Support', 'rakib@gmail.com', '$2y$10$XaTnTtCHquc7MFxLTmozDOh5liWmqvpHUNcjK4AqT4fnOoh.8tOUS', 'staff', '01648888888', 'Dhaka', 'active', '2026-05-09 13:03:37'),
+(20, NULL, 'KHONDOKER MOIN HOSSAIN', NULL, 'comt-2005131@dti.ac', '$2y$10$2hQrAQIbCbdnweh4Wjj9N.vU2i7yM.LIVS566zC6RRBs9AHvWGDWS', 'customer', '01647615608', 'Dhaka', 'active', '2026-05-12 06:04:38');
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `coverage_zones`
+--
+ALTER TABLE `coverage_zones`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `designations`
@@ -364,6 +408,12 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `coverage_zones`
+--
+ALTER TABLE `coverage_zones`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `designations`
 --
 ALTER TABLE `designations`
@@ -379,7 +429,7 @@ ALTER TABLE `expenses`
 -- AUTO_INCREMENT for table `invoices`
 --
 ALTER TABLE `invoices`
-  MODIFY `invoice_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `invoice_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `network_logs`
@@ -391,7 +441,7 @@ ALTER TABLE `network_logs`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `notification_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `notification_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `packages`
@@ -415,7 +465,7 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT for table `subscriptions`
 --
 ALTER TABLE `subscriptions`
-  MODIFY `subscription_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `subscription_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `tickets`
@@ -433,7 +483,7 @@ ALTER TABLE `ticket_replies`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- Constraints for dumped tables
