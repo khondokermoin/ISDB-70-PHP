@@ -68,6 +68,14 @@ if (isset($_GET['action'])) {
         header("Location: admin.php?page=coverage_admin&msg=zone_updated");
         exit;
     }
+
+    // নোটিফিকেশন Read মার্ক করার লজিক
+    if ($action == 'mark_notifs_read') {
+        // ডাটাবেসে সব আনরিড নোটিফিকেশনকে 1 (পঠিত) করে দেওয়া হলো
+        $db->query("UPDATE notifications SET is_read = 1 WHERE is_read = 0");
+        header("Location: admin.php"); // ড্যাশবোর্ডে ফেরত পাঠাবে
+        exit;
+    }
 }
 
 // ==========================================

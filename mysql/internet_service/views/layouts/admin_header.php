@@ -4,10 +4,19 @@ $currentPage = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
 
 // 🔥 অ্যাডমিনের সব নোটিফিকেশন মডালের জন্য আনা হচ্ছে
 $allNotifs = [];
+$unreadCount = 0; // আনরিড নোটিফিকেশন গোনার জন্য ভেরিয়েবল
+
 if (isset($db) && isset($_SESSION['user_id'])) {
     $notifStmt = $db->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY sent_at DESC");
     $notifStmt->execute([$_SESSION['user_id']]);
     $allNotifs = $notifStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // আনরিড (নতুন) নোটিফিকেশনগুলো গোনা হচ্ছে
+    foreach ($allNotifs as $notif) {
+        if (isset($notif['is_read']) && $notif['is_read'] == 0) {
+            $unreadCount++;
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -76,8 +85,8 @@ if (isset($db) && isset($_SESSION['user_id'])) {
             <div class="flex items-center space-x-6">
                 <button onclick="toggleNotifModal()" class="relative text-gray-500 hover:text-red-500 transition">
                     <i class="fa fa-bell text-2xl"></i>
-                    <?php if (count($allNotifs) > 0): ?>
-                        <span class="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white"><?php echo count($allNotifs); ?></span>
+                    <?php if ($unreadCount > 0): ?>
+                        <span class="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white"><?php echo $unreadCount; ?></span>
                     <?php endif; ?>
                 </button>
                 <span class="text-gray-600 border-l pl-6"><i class="fa fa-user-circle mr-2 text-gray-400 text-xl"></i> Admin</span>
@@ -87,19 +96,20 @@ if (isset($db) && isset($_SESSION['user_id'])) {
         <div id="notifModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-center items-center">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden transform transition-all scale-100">
                 <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                    <h3 class="text-lg font-bold text-gray-800"><i class="fa fa-bell text-red-500 mr-2"></i> All Notifications</h3>
+                    <h3 class="text-lg font-bold text-gray-800"><i class="fa fa-bell text-red-500 mr-2"></i> Notifications</h3>
                     <button onclick="toggleNotifModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fa fa-times text-2xl"></i></button>
                 </div>
+                
                 <div class="p-4 overflow-y-auto flex-1 bg-gray-50">
                     <?php if (count($allNotifs) > 0): ?>
                         <ul class="space-y-3">
                             <?php foreach ($allNotifs as $n): ?>
-                                <li class="bg-white p-4 rounded-lg border border-gray-200 flex items-start shadow-sm hover:shadow transition">
-                                    <div class="bg-red-100 text-red-600 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0 mt-1">
+                                <li class="p-4 rounded-lg border flex items-start shadow-sm transition <?php echo (isset($n['is_read']) && $n['is_read'] == 0) ? 'bg-white border-red-200 shadow-md' : 'bg-gray-50 border-gray-200 opacity-75 hover:opacity-100'; ?>">
+                                    <div class="<?php echo (isset($n['is_read']) && $n['is_read'] == 0) ? 'bg-red-100 text-red-600' : 'bg-gray-200 text-gray-500'; ?> rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0 mt-1">
                                         <i class="fa fa-bolt text-sm"></i>
                                     </div>
                                     <div>
-                                        <p class="text-sm text-gray-800 font-medium"><?php echo htmlspecialchars($n['message']); ?></p>
+                                        <p class="text-sm font-medium <?php echo (isset($n['is_read']) && $n['is_read'] == 0) ? 'text-gray-800' : 'text-gray-600'; ?>"><?php echo htmlspecialchars($n['message']); ?></p>
                                         <span class="text-xs text-gray-400 mt-1 inline-block"><i class="fa fa-clock mr-1"></i><?php echo isset($n['sent_at']) ? date("d M Y, h:i A", strtotime($n['sent_at'])) : 'Just now'; ?></span>
                                     </div>
                                 </li>
@@ -112,6 +122,14 @@ if (isset($db) && isset($_SESSION['user_id'])) {
                         </div>
                     <?php endif; ?>
                 </div>
+
+                <?php if ($unreadCount > 0): ?>
+                <div class="p-3 bg-white text-center border-t border-gray-200">
+                    <a href="admin.php?action=mark_notifs_read" class="text-sm font-bold text-blue-600 hover:text-blue-800 transition">
+                        <i class="fa fa-check-double mr-1"></i> Mark all as read
+                    </a>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
 
