@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once '../config/database.php';
 require_once '../src/Models/Package.php';
 
@@ -25,7 +26,7 @@ include '../views/layouts/header.php';
 
             if ($packages->rowCount() > 0) {
                 while ($row = $packages->fetch()) {
-                    ?>
+            ?>
                     <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden transform transition duration-300 hover:shadow-xl hover:border-blue-500">
                         <div class="bg-gray-800 text-white p-6 text-center border-b border-gray-700">
                             <i class="fa fa-building text-4xl mb-4 text-blue-400"></i>
@@ -47,7 +48,7 @@ include '../views/layouts/header.php';
                             <a href="order.php?id=<?php echo $row['package_id']; ?>" class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition duration-300">Request Quote</a>
                         </div>
                     </div>
-                    <?php
+            <?php
                 }
             } else {
                 echo "<div class='col-span-full text-center text-gray-500 py-10'>No corporate packages are currently available. Please contact support.</div>";

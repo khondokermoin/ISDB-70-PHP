@@ -3,13 +3,7 @@
 /** @var PDO $db */
 
 // ১. ডাটাবেস থেকে ড্যাশবোর্ডের জন্য রিয়েল-টাইম ডেটা আনা হচ্ছে
-// Packages Stats
-$totalPackages = $db->query("SELECT COUNT(*) FROM packages")->fetchColumn();
-$activePackages = $db->query("SELECT COUNT(*) FROM packages WHERE status='active'")->fetchColumn();
 
-// ... বাকি কোড ...
-
-// ১. ডাটাবেস থেকে ড্যাশবোর্ডের জন্য রিয়েল-টাইম ডেটা আনা হচ্ছে
 // Packages Stats
 $totalPackages = $db->query("SELECT COUNT(*) FROM packages")->fetchColumn();
 $activePackages = $db->query("SELECT COUNT(*) FROM packages WHERE status='active'")->fetchColumn();
@@ -25,6 +19,10 @@ $totalRevenue = $totalRevenue ? $totalRevenue : 0; // যদি কোনো প
 
 // Support Tickets Stats
 $openTickets = $db->query("SELECT COUNT(*) FROM tickets WHERE status='open'")->fetchColumn();
+
+// 🔥 Coverage Zones Stats (নতুন যোগ করা হলো)
+$total_zones = $db->query("SELECT COUNT(*) FROM coverage_zones")->fetchColumn();
+
 ?>
 
 <div class="mb-6">
@@ -76,6 +74,17 @@ $openTickets = $db->query("SELECT COUNT(*) FROM tickets WHERE status='open'")->f
         <div>
             <h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider">Open Tickets</h3>
             <p class="text-2xl font-bold text-gray-800"><?php echo $openTickets; ?></p>
+        </div>
+    </div>
+
+    <!-- Zone Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center border-l-4 border-blue-500 hover:shadow-md transition">
+        <div class="bg-blue-100 text-blue-600 p-4 rounded-lg mr-4">
+            <i class="fa fa-map-marked-alt text-2xl"></i>
+        </div>
+        <div>
+            <h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider">Coverage Zones</h3>
+            <p class="text-2xl font-bold text-gray-800"><?php echo $total_zones; ?></p>
         </div>
     </div>
 </div>

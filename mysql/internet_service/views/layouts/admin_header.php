@@ -50,6 +50,10 @@ if (isset($db) && isset($_SESSION['user_id'])) {
                 <i class="fa fa-user-tie w-6"></i> Manage Staff
             </a>
 
+            <a href="admin.php?page=coverage_admin" class="flex items-center px-4 py-3 rounded-lg transition <?php echo (isset($_GET['page']) && $_GET['page'] == 'coverage_admin') ? 'bg-gray-800 text-white border-l-4 border-red-600' : 'text-gray-400 hover:bg-gray-800 hover:text-white'; ?>">
+                <i class="fa fa-map-marked-alt w-6"></i> Coverage Areas
+            </a>
+
             <a href="admin.php?page=billings" class="flex items-center px-4 py-3 rounded-lg transition <?php echo ($currentPage == 'billings') ? 'bg-gray-800 text-white border-l-4 border-red-500' : 'text-gray-400 hover:bg-gray-800 hover:text-white'; ?>">
                 <i class="fa fa-file-invoice-dollar w-6"></i> Billings
             </a>

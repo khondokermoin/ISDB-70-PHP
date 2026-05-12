@@ -1,3 +1,14 @@
+<?php
+// 🔥 Intelephense Warning Fix: ভেরিয়েবলটি ফাইলের শুরুতেই ডিক্লেয়ার করা হলো
+$nav_dashboard_url = 'user_dashboard.php'; // Default
+if (isset($_SESSION['role'])) {
+    if ($_SESSION['role'] === 'admin') {
+        $nav_dashboard_url = 'admin.php';
+    } elseif ($_SESSION['role'] === 'staff') {
+        $nav_dashboard_url = 'staff_dashboard.php';
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,13 +17,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Optional: Tailwind Custom Configuration for Brand Colors -->
     <script>
         tailwind.config = {
             theme: {
@@ -25,11 +32,36 @@
             }
         }
     </script>
+
+    <style>
+        .nav-item {
+            position: relative;
+            padding-bottom: 4px;
+            /* আন্ডারলাইনের জন্য একটু স্পেস দেওয়া হলো */
+        }
+
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            width: 0;
+            height: 2px;
+            background: #dc2626;
+            /* থিমের সাথে মিল রেখে লাল (amberRed) করা হলো */
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-item:hover::after {
+            width: 100%;
+            /* ৮০% এর জায়গায় ১০০% দিলে দেখতে বেশি সুন্দর লাগে, আপনি চাইলে ৮০% ও রাখতে পারেন */
+        }
+    </style>
 </head>
 
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
-    <!-- Top-Bar START -->
     <div class="bg-amberDark text-gray-300 text-xs md:text-sm hidden md:block py-2">
         <div class="container mx-auto px-4 flex justify-between items-center max-w-6xl">
             <div class="flex space-x-6 items-center">
@@ -47,43 +79,71 @@
             </div>
         </div>
     </div>
-    <!-- Top-Bar END -->
 
-    <!-- Navbar START -->
     <header class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center max-w-6xl">
-            <!-- Logo -->
             <a href="index.php" class="text-3xl font-extrabold text-amberRed tracking-tight">
                 AMAR <span class="text-gray-800">IT</span>
             </a>
 
-            <!-- Desktop Menu -->
             <nav class="hidden md:flex space-x-6 font-semibold text-gray-600 items-center">
-                <a href="#" class="hover:text-amberRed transition">Home Internet</a>
-                <a href="corporate.php" class="hover:text-amberRed transition">Corporate</a>
-                <a href="#" class="hover:text-amberRed transition">IPTSP</a>
-                <a href="#" class="hover:text-amberRed transition">Hosting</a>
-                <a href="#" class="hover:text-amberRed transition">Support</a>
+                <a href="home_internet.php" class="nav-item hover:text-amberRed transition">Home Internet</a>
+                <a href="corporate.php" class="nav-item hover:text-amberRed transition">Corporate</a>
+                <a href="coverage.php" class="nav-item hover:text-amberRed transition">Coverage</a>
+                <a href="#" class="nav-item hover:text-amberRed transition">IPTSP</a>
+                <a href="#" class="nav-item hover:text-amberRed transition">Hosting</a>
+                <a href="support.php" class="nav-item hover:text-amberRed transition">Support</a>
 
-                <?php if(isset($_SESSION['user_id'])): ?>
-                    <?php 
-                        // Safe Check for Roles
-                        $nav_dashboard_url = 'user_dashboard.php'; // Default fallback
-                        if (isset($_SESSION['role'])) {
-                            if ($_SESSION['role'] === 'admin') $nav_dashboard_url = 'admin.php';
-                            elseif ($_SESSION['role'] === 'staff') $nav_dashboard_url = 'staff_dashboard.php';
-                        }
-                    ?>
+                <?php if (isset($_SESSION['user_id'])): ?>
                     <a href="<?php echo $nav_dashboard_url; ?>" class="bg-amberRed text-white px-5 py-2 rounded-full hover:bg-red-700 transition shadow-md">Dashboard</a>
                 <?php else: ?>
                     <a href="login.php" class="bg-gray-800 text-white px-5 py-2 rounded-full hover:bg-amberRed transition shadow-md"><i class="fa fa-user mr-2"></i> Login</a>
                 <?php endif; ?>
             </nav>
 
-            <!-- Mobile Menu Button -->
-            <button class="md:hidden text-gray-600 hover:text-amberRed focus:outline-none">
-                <i class="fa fa-bars text-2xl"></i>
+            <button id="mobile-menu-btn" class="md:hidden text-gray-600 hover:text-amberRed focus:outline-none transition">
+                <i id="mobile-icon" class="fa fa-bars text-2xl"></i>
             </button>
         </div>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 shadow-lg absolute w-full left-0 transition-all duration-300 ease-in-out">
+            <nav class="flex flex-col font-semibold text-gray-600 p-4 space-y-4">
+                <a href="home_internet.php" class="hover:text-amberRed transition block"><i class="fa fa-wifi w-6 text-center mr-2"></i>Home Internet</a>
+                <a href="corporate.php" class="hover:text-amberRed transition block"><i class="fa fa-building w-6 text-center mr-2"></i>Corporate</a>
+                <a href="coverage.php" class="hover:text-amberRed transition block"><i class="fa fa-map-marked-alt w-6 text-center mr-2"></i>Coverage</a>
+                <a href="#" class="hover:text-amberRed transition block"><i class="fa fa-globe w-6 text-center mr-2"></i>IPTSP</a>
+                <a href="#" class="hover:text-amberRed transition block"><i class="fa fa-server w-6 text-center mr-2"></i>Hosting</a>
+                <a href="support.php" class="hover:text-amberRed transition block"><i class="fa fa-headset w-6 text-center mr-2"></i>Support</a>
+
+                <div class="border-t border-gray-200 pt-4 mt-2">
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <a href="<?php echo $nav_dashboard_url; ?>" class="block text-center bg-amberRed text-white px-5 py-3 rounded-lg hover:bg-red-700 transition shadow-md">Go to Dashboard</a>
+                    <?php else: ?>
+                        <a href="login.php" class="block text-center bg-gray-800 text-white px-5 py-3 rounded-lg hover:bg-amberRed transition shadow-md"><i class="fa fa-user mr-2"></i> Login / Register</a>
+                    <?php endif; ?>
+                </div>
+            </nav>
+        </div>
     </header>
-    <!-- Navbar END -->
+
+    <script>
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+        const icon = document.getElementById('mobile-icon');
+
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+
+            // Icon change logic (Bars to Times)
+            if (menu.classList.contains('hidden')) {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            } else {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            }
+        });
+    </script>
+</body>
+
+</html>

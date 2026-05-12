@@ -31,6 +31,45 @@ if ($action == 'add_expense' && $_SERVER['REQUEST_METHOD'] == 'POST') {
     exit;
 }
 
+// কভারেজ জোন CRUD লজিক
+if (isset($_GET['action'])) {
+    $action = $_GET['action'];
+
+    // জোন যোগ করা
+    if ($action == 'add_zone' && $_SERVER['REQUEST_METHOD'] == 'POST') {
+        $district = $_POST['district'];
+        $upazila = $_POST['upazila'];
+        $desc = $_POST['description'];
+        $status = $_POST['status'];
+
+        $db->prepare("INSERT INTO coverage_zones (district, upazila, description, status) VALUES (?, ?, ?, ?)")
+            ->execute([$district, $upazila, $desc, $status]);
+        header("Location: admin.php?page=coverage_admin&msg=zone_added");
+        exit;
+    }
+
+    // জোন ডিলিট করা
+    if ($action == 'delete_zone' && isset($_GET['id'])) {
+        $db->prepare("DELETE FROM coverage_zones WHERE id = ?")->execute([(int)$_GET['id']]);
+        header("Location: admin.php?page=coverage_admin&msg=zone_deleted");
+        exit;
+    }
+
+    // জোন আপডেট (Edit) করার লজিক
+    if ($action == 'edit_zone' && $_SERVER['REQUEST_METHOD'] == 'POST') {
+        $id = (int)$_POST['id'];
+        $district = $_POST['district'];
+        $upazila = $_POST['upazila'];
+        $desc = $_POST['description'];
+        $status = $_POST['status'];
+
+        $db->prepare("UPDATE coverage_zones SET district = ?, upazila = ?, description = ?, status = ? WHERE id = ?")
+            ->execute([$district, $upazila, $desc, $status, $id]);
+        header("Location: admin.php?page=coverage_admin&msg=zone_updated");
+        exit;
+    }
+}
+
 // ==========================================
 // 🔥 CORE ISP LOGIC (ACTIVATE, SUSPEND)
 // ==========================================
@@ -378,6 +417,181 @@ if ($page == 'dashboard') {
 <?php
 }
 
+// --- admin.php এর ভেতর যেখানে পেজ চেক করা হয় সেখানে বসান ---
+elseif ($page == 'coverage_admin') {
+    $zones = $db->query("SELECT * FROM coverage_zones ORDER BY district ASC")->fetchAll(PDO::FETCH_ASSOC);
+?>
+    <div class="mt-6">
+        <div class="flex justify-between items-center bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800"><i class="fa fa-map-marked-alt text-amberRed mr-2"></i> Coverage Zones</h2>
+                <p class="text-sm text-gray-500">Manage all your active and upcoming network areas</p>
+            </div>
+            <button onclick="openAddModal()" class="bg-gray-900 hover:bg-black text-white font-bold py-2 px-5 rounded-lg shadow transition flex items-center">
+                <i class="fa fa-plus-circle mr-2"></i> Add New Zone
+            </button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm text-left">
+                    <thead class="bg-gray-100 text-gray-600">
+                        <tr>
+                            <th class="py-4 px-5">District</th>
+                            <th class="py-4 px-5">Area / Upazila</th>
+                            <th class="py-4 px-5 w-1/3">Description</th>
+                            <th class="py-4 px-5 text-center">Status</th>
+                            <th class="py-4 px-5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <?php foreach ($zones as $z): ?>
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="py-4 px-5 font-bold text-gray-800"><?php echo htmlspecialchars($z['district']); ?></td>
+                                <td class="py-4 px-5 font-semibold text-gray-700"><?php echo htmlspecialchars($z['upazila']); ?></td>
+                                <td class="py-4 px-5 text-gray-500 text-xs"><?php echo htmlspecialchars($z['description'] ?: 'N/A'); ?></td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider <?php echo $z['status'] == 'active' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'; ?>">
+                                        <?php echo strtoupper($z['status']); ?>
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-right space-x-3">
+                                    <button onclick="openEditModal(this)"
+                                        data-id="<?php echo $z['id']; ?>"
+                                        data-district="<?php echo htmlspecialchars($z['district']); ?>"
+                                        data-upazila="<?php echo htmlspecialchars($z['upazila']); ?>"
+                                        data-status="<?php echo $z['status']; ?>"
+                                        data-desc="<?php echo htmlspecialchars($z['description']); ?>"
+                                        class="text-blue-500 hover:text-blue-700 transition" title="Edit">
+                                        <i class="fa fa-edit text-lg"></i>
+                                    </button>
+
+                                    <a href="admin.php?action=delete_zone&id=<?php echo $z['id']; ?>" onclick="return confirm('Are you sure you want to delete this zone?')" class="text-red-500 hover:text-red-700 transition" title="Delete">
+                                        <i class="fa fa-trash-alt text-lg"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+
+                        <?php if (count($zones) == 0): ?>
+                            <tr>
+                                <td colspan="5" class="py-8 text-center text-gray-500">No coverage zones found. Click "Add New Zone" to create one.</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="addModal" class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-60 flex items-center justify-center backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-100 transition-transform">
+            <div class="flex justify-between items-center bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-bold text-gray-800"><i class="fa fa-plus-circle text-amberRed mr-2"></i> Add New Zone</h3>
+                <button onclick="closeAddModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fa fa-times text-xl"></i></button>
+            </div>
+            <form action="admin.php?action=add_zone" method="POST" class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">District Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="district" placeholder="e.g. Dhaka" required class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-amberRed outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Area / Upazila <span class="text-red-500">*</span></label>
+                        <input type="text" name="upazila" placeholder="e.g. Dhanmondi" required class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-amberRed outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Status</label>
+                    <select name="status" class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-amberRed outline-none bg-gray-50">
+                        <option value="active">Active Now</option>
+                        <option value="upcoming">Coming Soon</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Description</label>
+                    <textarea name="description" rows="3" placeholder="Coverage details..." class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-amberRed outline-none"></textarea>
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeAddModal()" class="px-5 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-900 shadow-sm rounded-lg font-bold transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-gray-900 hover:bg-black text-white rounded-lg font-bold shadow-md transition">Save Zone</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="editModal" class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-60 flex items-center justify-center backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-100 transition-transform">
+            <div class="flex justify-between items-center bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-bold text-gray-800"><i class="fa fa-edit text-blue-500 mr-2"></i> Edit Zone</h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fa fa-times text-xl"></i></button>
+            </div>
+            <form action="admin.php?action=edit_zone" method="POST" class="p-6 space-y-4">
+                <input type="hidden" name="id" id="edit_id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">District Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="district" id="edit_district" required class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Area / Upazila <span class="text-red-500">*</span></label>
+                        <input type="text" name="upazila" id="edit_upazila" required class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Status</label>
+                    <select name="status" id="edit_status" class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50">
+                        <option value="active">Active Now</option>
+                        <option value="upcoming">Coming Soon</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Description</label>
+                    <textarea name="description" id="edit_description" rows="3" class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeEditModal()" class="px-5 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-900 shadow-sm rounded-lg font-bold transition">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md transition">
+                        Update Zone
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Add Modal
+        function openAddModal() {
+            document.getElementById('addModal').classList.remove('hidden');
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+        }
+
+        // Edit Modal
+        function openEditModal(button) {
+            // Get data from the clicked button attributes
+            document.getElementById('edit_id').value = button.getAttribute('data-id');
+            document.getElementById('edit_district').value = button.getAttribute('data-district');
+            document.getElementById('edit_upazila').value = button.getAttribute('data-upazila');
+            document.getElementById('edit_status').value = button.getAttribute('data-status');
+            document.getElementById('edit_description').value = button.getAttribute('data-desc');
+
+            // Show the modal
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+    </script>
+<?php
+}
+
 // ==========================================
 // 🔥 MANAGE STAFF
 // ==========================================
@@ -509,6 +723,9 @@ elseif ($page == 'staff') {
     </div>
 <?php
 }
+
+
+
 
 // ==========================================
 // 🔥 MANAGE PACKAGES
