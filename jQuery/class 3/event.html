@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>jQuery Events Example</title>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <style>
+        body{
+            font-family: Arial;
+            padding: 20px;
+        }
+
+        input, select, button{
+            margin: 10px 0;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>jQuery All Events Example</h2>
+
+    <!-- Focus + Blur -->
+    <input type="text" id="name" placeholder="Enter your name">
+
+    <br>
+
+    <!-- Change -->
+    <select id="city">
+        <option value="">Select City</option>
+        <option>Dhaka</option>
+        <option>Khulna</option>
+        <option>Chittagong</option>
+    </select>
+
+    <br>
+
+    <!-- Keydown -->
+    <input type="text" id="typing" placeholder="Type something">
+
+    <br>
+
+    <!-- Submit -->
+    <form id="myForm">
+        <button type="submit">Submit Form</button>
+    </form>
+
+<script>
+
+$(document).ready(function(){
+
+    // Focus + CSS
+    $("#name").focus(function(){
+
+        $(this).css({
+            "background-color": "lightblue",
+            "border": "2px solid blue"
+        });
+
+    });
+
+    // Blur + CSS
+    $("#name").blur(function(){
+
+        $(this).css({
+            "background-color": "yellow",
+            "border": "2px solid red"
+        });
+
+    });
+
+    // Change + Alert
+    $("#city").change(function(){
+
+        alert("City Changed!");
+
+    });
+
+    // Keydown + Alert
+    $("#typing").keydown(function(){
+
+        alert("Key Pressed!");
+
+    });
+
+    // Submit + Alert
+    $("#myForm").submit(function(e){
+
+        e.preventDefault();
+
+        alert("Form Submitted!");
+
+    });
+
+});
+
+</script>
+
+</body>
+</html>

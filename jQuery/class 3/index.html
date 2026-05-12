@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <title>Document</title>
+</head>
+<body>
+    <p id="pera">Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero nesciunt quasi debitis et. Obcaecati consequatur sequi impedit ipsa! Ducimus illum illo quae earum dolorem repellat repudiandae exercitationem excepturi dolor magni?</p>
+
+
+    <button id="btn"> change text</button>
+
+
+    <a href="#" target="_blank">Moin</a>
+    <img src="./event_anita.png" alt="" id="im">
+    <button id="btt">change size</button>
+
+
+    <script>
+        $(document).ready(function(){
+            $('#btt').click(function(){
+                $('#im').attr('width','300px')
+            })
+        })
+
+        $("a").attr("href","https://khondokermoinhossain.bio");
+        $("a").removeAttr("target");
+
+
+
+
+        $(document).ready(function(){
+            $('#btn').click(function(){
+                $('#pera').before("my country")
+            })
+        })
+    </script>
+</body>
+</html>
