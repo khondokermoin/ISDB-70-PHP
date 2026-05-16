@@ -298,12 +298,12 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `role_id`, `full_name`, `designation`, `email`, `password_hash`, `role`, `phone`, `address`, `status`, `created_at`) VALUES
-(4, NULL, 'Khondoker Moin Hossain', NULL, 'admin@amarit.com', '$2y$10$JaCY6PCN1vPHlwsLfeErMesRFggmyoC1Rxh7z8w4.Cq8D9eLZ0erm', 'admin', '01711000000', 'Jigatola, Dhaka', 'active', '2026-05-07 19:28:48'),
-(13, NULL, 'Rahim', 'Field Technician', 'rahim@gmail.com', '$2y$10$DC1BSU.ZRGfM7mvHDRANReEk7GcNT2Fepcb7k3wPxfWq2eifT/jzi', 'staff', '01647655555', 'Dhanmondi 15', 'active', '2026-05-09 13:01:35'),
-(14, NULL, 'Karim', 'Network Engineer', 'karim@gmail.com', '$2y$10$X.GeC7OGGp4IHAFCC5WLzOLTae/pXl2uci9ktZ6ai0nSvwMF8E9Zy', 'staff', '01647666666', 'Dhaka', 'active', '2026-05-09 13:02:23'),
-(15, NULL, 'Salam', 'Billing Manager', 'salam@gmail.com', '$2y$10$WWzWFBhclxDW9.a4BL4Xj.1ClFOw.hvx5NMd/4O6KblADD5Uv9uhq', 'staff', '01647777777', 'Dhaka', 'active', '2026-05-09 13:02:57'),
-(16, NULL, 'Rakib', 'Customer Support', 'rakib@gmail.com', '$2y$10$XaTnTtCHquc7MFxLTmozDOh5liWmqvpHUNcjK4AqT4fnOoh.8tOUS', 'staff', '01648888888', 'Dhaka', 'active', '2026-05-09 13:03:37'),
-(20, NULL, 'KHONDOKER MOIN HOSSAIN', NULL, 'comt-2005131@dti.ac', '$2y$10$2hQrAQIbCbdnweh4Wjj9N.vU2i7yM.LIVS566zC6RRBs9AHvWGDWS', 'customer', '01647615608', 'Dhaka', 'active', '2026-05-12 06:04:38');
+(1, NULL, 'Khondoker Moin Hossain', NULL, 'admin@amarit.com', '$2y$10$JaCY6PCN1vPHlwsLfeErMesRFggmyoC1Rxh7z8w4.Cq8D9eLZ0erm', 'admin', '01711000000', 'Jigatola, Dhaka', 'active', '2026-05-07 19:28:48'),
+(2, NULL, 'Rahim', 'Field Technician', 'rahim@gmail.com', '$2y$10$DC1BSU.ZRGfM7mvHDRANReEk7GcNT2Fepcb7k3wPxfWq2eifT/jzi', 'staff', '01647655555', 'Dhanmondi 15', 'active', '2026-05-09 13:01:35'),
+(3, NULL, 'Karim', 'Network Engineer', 'karim@gmail.com', '$2y$10$X.GeC7OGGp4IHAFCC5WLzOLTae/pXl2uci9ktZ6ai0nSvwMF8E9Zy', 'staff', '01647666666', 'Dhaka', 'active', '2026-05-09 13:02:23'),
+(4, NULL, 'Salam', 'Billing Manager', 'salam@gmail.com', '$2y$10$WWzWFBhclxDW9.a4BL4Xj.1ClFOw.hvx5NMd/4O6KblADD5Uv9uhq', 'staff', '01647777777', 'Dhaka', 'active', '2026-05-09 13:02:57'),
+(5, NULL, 'Rakib', 'Customer Support', 'rakib@gmail.com', '$2y$10$XaTnTtCHquc7MFxLTmozDOh5liWmqvpHUNcjK4AqT4fnOoh.8tOUS', 'staff', '01648888888', 'Dhaka', 'active', '2026-05-09 13:03:37'),
+(6, NULL, 'KHONDOKER MOIN HOSSAIN', NULL, 'comt-2005131@dti.ac', '$2y$10$2hQrAQIbCbdnweh4Wjj9N.vU2i7yM.LIVS566zC6RRBs9AHvWGDWS', 'customer', '01647615608', 'Dhaka', 'active', '2026-05-12 06:04:38');
 
 --
 -- Indexes for dumped tables

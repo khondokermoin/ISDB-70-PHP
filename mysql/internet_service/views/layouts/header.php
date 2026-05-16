@@ -8,6 +8,9 @@ if (isset($_SESSION['role'])) {
         $nav_dashboard_url = 'staff_dashboard.php';
     }
 }
+
+// Get the current page name to add the active class
+$current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -53,9 +56,10 @@ if (isset($_SESSION['role'])) {
             transform: translateX(-50%);
         }
 
-        .nav-item:hover::after {
+        .nav-item:hover::after,
+        .nav-item.active::after {
             width: 100%;
-            /* ৮০% এর জায়গায় ১০০% দিলে দেখতে বেশি সুন্দর লাগে, আপনি চাইলে ৮০% ও রাখতে পারেন */
+            /* হোভার করলে এবং একটিভ থাকলে আন্ডারলাইন ১০০% হবে */
         }
     </style>
 </head>
@@ -87,12 +91,12 @@ if (isset($_SESSION['role'])) {
             </a>
 
             <nav class="hidden md:flex space-x-6 font-semibold text-gray-600 items-center">
-                <a href="home_internet.php" class="nav-item hover:text-amberRed transition">Home Internet</a>
-                <a href="corporate.php" class="nav-item hover:text-amberRed transition">Corporate</a>
-                <a href="coverage.php" class="nav-item hover:text-amberRed transition">Coverage</a>
-                <a href="#" class="nav-item hover:text-amberRed transition">IPTSP</a>
-                <a href="#" class="nav-item hover:text-amberRed transition">Hosting</a>
-                <a href="support.php" class="nav-item hover:text-amberRed transition">Support</a>
+                <a href="home_internet.php" class="nav-item hover:text-amberRed transition <?php echo ($current_page == 'home_internet.php') ? 'active text-amberRed' : ''; ?>">Home Internet</a>
+                <a href="corporate.php" class="nav-item hover:text-amberRed transition <?php echo ($current_page == 'corporate.php') ? 'active text-amberRed' : ''; ?>">Corporate</a>
+                <a href="coverage.php" class="nav-item hover:text-amberRed transition <?php echo ($current_page == 'coverage.php') ? 'active text-amberRed' : ''; ?>">Coverage</a>
+                <a href="iptsp.php" class="nav-item hover:text-amberRed transition <?php echo ($current_page == 'iptsp.php') ? 'active text-amberRed' : ''; ?>">IPTSP</a>
+                <a href="hosting.php" class="nav-item hover:text-amberRed transition <?php echo ($current_page == 'hosting.php') ? 'active text-amberRed' : ''; ?>">Hosting</a>
+                <a href="support.php" class="nav-item hover:text-amberRed transition <?php echo ($current_page == 'support.php') ? 'active text-amberRed' : ''; ?>">Support</a>
 
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <a href="<?php echo $nav_dashboard_url; ?>" class="bg-amberRed text-white px-5 py-2 rounded-full hover:bg-red-700 transition shadow-md">Dashboard</a>
@@ -108,12 +112,12 @@ if (isset($_SESSION['role'])) {
 
         <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 shadow-lg absolute w-full left-0 transition-all duration-300 ease-in-out">
             <nav class="flex flex-col font-semibold text-gray-600 p-4 space-y-4">
-                <a href="home_internet.php" class="hover:text-amberRed transition block"><i class="fa fa-wifi w-6 text-center mr-2"></i>Home Internet</a>
-                <a href="corporate.php" class="hover:text-amberRed transition block"><i class="fa fa-building w-6 text-center mr-2"></i>Corporate</a>
-                <a href="coverage.php" class="hover:text-amberRed transition block"><i class="fa fa-map-marked-alt w-6 text-center mr-2"></i>Coverage</a>
-                <a href="#" class="hover:text-amberRed transition block"><i class="fa fa-globe w-6 text-center mr-2"></i>IPTSP</a>
-                <a href="#" class="hover:text-amberRed transition block"><i class="fa fa-server w-6 text-center mr-2"></i>Hosting</a>
-                <a href="support.php" class="hover:text-amberRed transition block"><i class="fa fa-headset w-6 text-center mr-2"></i>Support</a>
+                <a href="home_internet.php" class="hover:text-amberRed transition block <?php echo ($current_page == 'home_internet.php') ? 'text-amberRed' : ''; ?>"><i class="fa fa-wifi w-6 text-center mr-2"></i>Home Internet</a>
+                <a href="corporate.php" class="hover:text-amberRed transition block <?php echo ($current_page == 'corporate.php') ? 'text-amberRed' : ''; ?>"><i class="fa fa-building w-6 text-center mr-2"></i>Corporate</a>
+                <a href="coverage.php" class="hover:text-amberRed transition block <?php echo ($current_page == 'coverage.php') ? 'text-amberRed' : ''; ?>"><i class="fa fa-map-marked-alt w-6 text-center mr-2"></i>Coverage</a>
+                <a href="iptsp.php" class="hover:text-amberRed transition block <?php echo ($current_page == 'iptsp.php') ? 'text-amberRed' : ''; ?>"><i class="fa fa-globe w-6 text-center mr-2"></i>IPTSP</a>
+                <a href="hosting.php" class="hover:text-amberRed transition block <?php echo ($current_page == 'hosting.php') ? 'text-amberRed' : ''; ?>"><i class="fa fa-server w-6 text-center mr-2"></i>Hosting</a>
+                <a href="support.php" class="hover:text-amberRed transition block <?php echo ($current_page == 'support.php') ? 'text-amberRed' : ''; ?>"><i class="fa fa-headset w-6 text-center mr-2"></i>Support</a>
 
                 <div class="border-t border-gray-200 pt-4 mt-2">
                     <?php if (isset($_SESSION['user_id'])): ?>

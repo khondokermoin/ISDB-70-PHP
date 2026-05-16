@@ -127,7 +127,7 @@ if (isset($_GET['action'])) {
         $db->prepare("
             UPDATE coverage_zones 
             SET district = ?, upazila = ?, description = ?, status = ?
-            WHERE notification_id = ?
+            WHERE id = ?
         ")->execute([$district, $upazila, $desc, $status, $id]);
 
         header("Location: admin.php?page=coverage_admin&msg=zone_updated");

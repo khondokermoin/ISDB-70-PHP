@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="./jquery-4.0.0.min.js"></script>
+    <title>Document</title>
+</head>
+<style>
+body{
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+</style>
+<body>
+
+<h1>Color Changing Background</h1>
+
+<script>
+$(function () {
+
+    let colors = [
+        {
+            backgroundColor: "black",
+            frontColor: "white"
+        },
+        {
+            backgroundColor: "blue",
+            frontColor: "yellow"
+        },
+        {
+            backgroundColor: "green",
+            frontColor: "white"
+        },
+        {
+            backgroundColor: "purple",
+            frontColor: "orange"
+        }
+    ];
+
+    let index = 0;
+
+    setInterval(function () {
+
+        $("body").css("background-color", colors[index].backgroundColor);
+        $("body").css("color", colors[index].frontColor);
+
+        index++;
+
+        if (index >= colors.length) {
+            index = 0;
+        }
+
+    }, 2000);
+
+});
+</script>
+
+</body>
+</html>

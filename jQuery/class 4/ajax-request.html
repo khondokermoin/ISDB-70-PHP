@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AJAX User Input Example</title>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+
+    <h2>User Input with AJAX</h2>
+
+    <input type="text" id="username" placeholder="Enter your name">
+    
+    <button id="submitBtn">Send</button>
+
+    <div id="result"></div>
+
+    <script>
+        $("#submitBtn").click(function () {
+
+            let username = $("#username").val();
+
+            $.ajax({
+                url: "process.php",
+                type: "POST",
+                data: {
+                    username: username
+                },
+
+                success: function (response) {
+                    $("#result").html(response);
+                }
+            });
+
+        });
+    </script>
+
+</body>
+</html>
