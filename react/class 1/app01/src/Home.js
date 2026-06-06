@@ -21,7 +21,11 @@ import React from 'react'
 
 export default function Home() {
   return (
+    <>
+    <h1>This is home</h1>
     <p>Home</p>
-    
+    <pre>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Adipisci, blanditiis nam amet ipsa natus maxime minus. Accusamus laboriosam incidunt culpa necessitatibus quos mollitia, similique eveniet odio non exercitationem, molestiae porro.</pre>
+
+    </>
   )
 }
