@@ -7,10 +7,7 @@ import About from "./About";
 export default function Home() {
   return (
     <>
-    
-
       <main>
-
         <section id="home" className="bg-primary text-white text-center p-5">
           <div className="container">
             <h1>Welcome to My Website</h1>
@@ -18,8 +15,7 @@ export default function Home() {
           </div>
         </section>
 
-
-        <About/>
+        <About />
 
         <section id="services" className="bg-light p-5">
           <div className="container">
@@ -47,16 +43,10 @@ export default function Home() {
                 </div>
               </div>
             </div>
-
           </div>
         </section>
-
-        
-
       </main>
-      <Contact/>
-
-      <Footer />
+      <Contact />
     </>
   );
 }
