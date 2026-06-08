@@ -7,6 +7,8 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Footer from "./components/Footer";
+import Props from "./pages/Props";
+import Events from "./pages/Events";
 
 function Layout() {
   return (
@@ -26,6 +28,8 @@ export default function Allroutes() {
         <Route index element={<Home />} />
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
+        <Route path="props" element={<Props />} />
+        <Route path="events" element={<Events />} />
       </Route>
     </Routes>
     </BrowserRouter>
