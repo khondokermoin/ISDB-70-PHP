@@ -113,6 +113,13 @@ export default function Header() {
               </Link>
             </li>
 
+            {/* LIST */}
+            <li className="nav-item">
+              <Link className="nav-link" to="/list">
+                List
+              </Link>
+            </li>
+
           </ul>
 
         </div>
