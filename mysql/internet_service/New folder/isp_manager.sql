@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 12, 2026 at 08:42 AM
+-- Generation Time: Jun 09, 2026 at 10:42 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -100,13 +100,6 @@ CREATE TABLE `invoices` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `invoices`
---
-
-INSERT INTO `invoices` (`invoice_id`, `user_id`, `subscription_id`, `invoice_number`, `period_start`, `period_end`, `amount`, `due_date`, `status`, `created_at`) VALUES
-(11, 20, 10, 'INV-6A02C2F66A402', '2026-05-12', '2026-06-11', 500.00, '2026-05-15', 'unpaid', '2026-05-12 06:04:38');
-
 -- --------------------------------------------------------
 
 --
@@ -136,23 +129,6 @@ CREATE TABLE `notifications` (
   `is_read` tinyint(1) DEFAULT 0,
   `sent_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `notifications`
---
-
-INSERT INTO `notifications` (`notification_id`, `user_id`, `type`, `message`, `is_read`, `sent_at`) VALUES
-(1, 4, NULL, '🔥 New Order: Ibrahim has requested a new internet connection. Please assign a technician from \'Manage Customers\'.', 1, '2026-05-09 17:35:26'),
-(2, 13, NULL, '🚨 New Job: You have been assigned for a New Connection Setup (Customer ID: #19). Please check your pending tasks.', 1, '2026-05-09 17:36:17'),
-(3, 4, NULL, '✅ Job Completed: Ticket #10 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 1, '2026-05-09 17:36:51'),
-(4, 4, NULL, '✅ Job Completed: Ticket #9 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 1, '2026-05-09 17:37:08'),
-(5, 4, NULL, '🚀 Upgrade Request: A customer requested to upgrade to BASIC+. Please check Support Tickets.', 1, '2026-05-09 18:09:25'),
-(6, 4, NULL, '✅ Job Completed: Ticket #11 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 1, '2026-05-09 18:26:14'),
-(7, 4, NULL, '🚀 Upgrade & Invoice: Ibrahim requested to upgrade to POSITIVE+. New invoice generated.', 1, '2026-05-09 18:26:44'),
-(8, 4, NULL, '✅ Job Completed: Ticket #12 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 1, '2026-05-09 18:28:04'),
-(9, 4, NULL, '💰 Payment Submitted: TrxID pouy9654783214 received for INV-69FF68B7E7ACB. Check Support Tickets to verify.', 1, '2026-05-09 19:04:29'),
-(10, 4, NULL, '✅ Job Completed: Ticket #13 has been marked as resolved by Technician. Please review or ACTIVATE the line.', 1, '2026-05-09 19:05:31'),
-(11, 4, NULL, '🔥 New Order: KHONDOKER MOIN HOSSAIN has requested a new internet connection. Please assign a technician from \'Manage Customers\'.', 1, '2026-05-12 06:04:38');
 
 -- --------------------------------------------------------
 
@@ -234,13 +210,6 @@ CREATE TABLE `subscriptions` (
   `end_date` date DEFAULT NULL,
   `status` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `subscriptions`
---
-
-INSERT INTO `subscriptions` (`subscription_id`, `user_id`, `package_id`, `start_date`, `end_date`, `status`) VALUES
-(10, 20, 1, NULL, NULL, 'pending');
 
 -- --------------------------------------------------------
 
@@ -490,57 +459,10 @@ ALTER TABLE `users`
 --
 
 --
--- Constraints for table `invoices`
---
-ALTER TABLE `invoices`
-  ADD CONSTRAINT `invoices_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `invoices_ibfk_2` FOREIGN KEY (`subscription_id`) REFERENCES `subscriptions` (`subscription_id`) ON DELETE CASCADE;
-
---
 -- Constraints for table `network_logs`
 --
 ALTER TABLE `network_logs`
   ADD CONSTRAINT `network_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `notifications`
---
-ALTER TABLE `notifications`
-  ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `payments`
---
-ALTER TABLE `payments`
-  ADD CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`invoice_id`) REFERENCES `invoices` (`invoice_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `payments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `subscriptions`
---
-ALTER TABLE `subscriptions`
-  ADD CONSTRAINT `subscriptions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `subscriptions_ibfk_2` FOREIGN KEY (`package_id`) REFERENCES `packages` (`package_id`);
-
---
--- Constraints for table `tickets`
---
-ALTER TABLE `tickets`
-  ADD CONSTRAINT `tickets_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `tickets_ibfk_2` FOREIGN KEY (`assigned_to`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
-
---
--- Constraints for table `ticket_replies`
---
-ALTER TABLE `ticket_replies`
-  ADD CONSTRAINT `ticket_replies_ibfk_1` FOREIGN KEY (`ticket_id`) REFERENCES `tickets` (`ticket_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `ticket_replies_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `users`
---
-ALTER TABLE `users`
-  ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`role_id`) ON DELETE SET NULL;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
