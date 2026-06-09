@@ -16,9 +16,32 @@ $active_users = 0;
 $counts = ['todays_tasks' => 0, 'total_pending' => 0, 'total_resolved' => 0];
 
 // 🔥 স্মার্ট আপডেট: শুধুমাত্র গত ২৪ ঘণ্টার নতুন নোটিফিকেশন দেখাবে
-$notifQuery = $db->prepare("SELECT message FROM notifications WHERE user_id = :uid AND sent_at >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY sent_at DESC LIMIT 1");
+/* $notifQuery = $db->prepare("SELECT message FROM notifications WHERE user_id = :uid AND sent_at >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY sent_at DESC LIMIT 1");
+$notifQuery->execute([':uid' => $staff_id]);
+$notification = $notifQuery->fetch(PDO::FETCH_ASSOC); */
+
+// update staf notification fix errors
+// এখানে নতুন notification code paste করো
+$notifQuery = $db->prepare("
+    SELECT notification_id, message
+    FROM notifications
+    WHERE user_id = :uid
+      AND is_read = 0
+      AND sent_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)
+    ORDER BY sent_at DESC
+    LIMIT 1
+");
 $notifQuery->execute([':uid' => $staff_id]);
 $notification = $notifQuery->fetch(PDO::FETCH_ASSOC);
+
+if ($notification) {
+    $markRead = $db->prepare("
+        UPDATE notifications
+        SET is_read = 1
+        WHERE notification_id = ?
+    ");
+    $markRead->execute([$notification['notification_id']]);
+}
 
 // =====================================
 // 🔥 BILLING MANAGER LOGIC
