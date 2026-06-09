@@ -4,11 +4,14 @@ export default function Forms() {
   // const [name, setName] = useState("");
   const [input, setInput] = useState({});
 
-  function handelChange(e) {
+  function handleChange(e) {
     const name = e.target.name;
     const value = e.target.value;
 
-    setInput((values) => ({ ...values, [name]: value }));
+    setInput((values) => ({
+      ...values,
+      [name]: value,
+    }));
   }
 
   return (
