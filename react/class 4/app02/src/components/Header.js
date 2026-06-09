@@ -113,6 +113,19 @@ export default function Header() {
               </Link>
             </li>
 
+            {/* LIST */}
+            <li className="nav-item">
+              <Link className="nav-link" to="/list">
+                List
+              </Link>
+            </li>
+
+            {/* FORMS */}
+            <li className="nav-item">
+              <Link className="nav-link" to="/forms">
+                Form
+              </Link>
+            </li>
 
           </ul>
 

@@ -9,6 +9,8 @@ import Contact from "./pages/Contact";
 import Footer from "./components/Footer";
 import Props from "./pages/Props";
 import Events from "./pages/Events";
+import List from "./pages/List";
+import Forms from "./pages/Forms";
 
 function Layout() {
   return (
@@ -30,6 +32,8 @@ export default function Allroutes() {
         <Route path="contact" element={<Contact />} />
         <Route path="props" element={<Props />} />
         <Route path="events" element={<Events />} />
+        <Route path="list" element={<List />} />
+        <Route path="forms" element={<Forms />} />
       </Route>
     </Routes>
     </BrowserRouter>
