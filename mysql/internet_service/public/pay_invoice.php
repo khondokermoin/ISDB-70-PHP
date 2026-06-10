@@ -1,13 +1,14 @@
 <?php
 session_start();
 
-// সিকিউরিটি চেক
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
 
 require_once '../config/database.php';
+require_once '../config/bkash_config.php';
+
 $db = (new Database())->getConnection();
 $user_id = $_SESSION['user_id'];
 
@@ -18,12 +19,11 @@ if (!isset($_GET['invoice_id'])) {
 
 $invoice_id = (int)$_GET['invoice_id'];
 
-// ইনভয়েস চেক করা হচ্ছে
+// ইনভয়েস চেক
 $stmt = $db->prepare("SELECT * FROM invoices WHERE invoice_id = ? AND user_id = ?");
 $stmt->execute([$invoice_id, $user_id]);
 $invoice = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// ইনভয়েস না পেলে বা ইতিমধ্যে পেইড হলে ড্যাশবোর্ডে ফেরত পাঠাবে
 if (!$invoice || $invoice['status'] == 'paid') {
     header("Location: user_dashboard.php");
     exit;
@@ -32,58 +32,95 @@ if (!$invoice || $invoice['status'] == 'paid') {
 $error_msg = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $bkash_number = trim($_POST['bkash_number']);
-    $trx_id = trim($_POST['trx_id']);
+    // ১. Grant Token API Call
+    $post_token = json_encode([
+        'app_key' => BKASH_APP_KEY,
+        'app_secret' => BKASH_APP_SECRET
+    ]);
 
-    if (empty($bkash_number) || empty($trx_id)) {
-        $error_msg = "Please provide both bKash number and Transaction ID.";
-    } else {
-        try {
-            $db->beginTransaction();
+    $url = BKASH_BASE_URL . '/tokenized/checkout/token/grant';
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'username: ' . BKASH_USERNAME,
+        'password: ' . BKASH_PASSWORD
+    ]);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $post_token);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+    $token_response = curl_exec($ch);
+    curl_close($ch);
 
-            // ১. ইনভয়েস স্ট্যাটাস 'pending' (Verifying) করে দেওয়া
-            $db->prepare("UPDATE invoices SET status = 'pending' WHERE invoice_id = ?")->execute([$invoice_id]);
+    $token_data = json_decode($token_response, true);
 
-            // ২. বিলিং ম্যানেজারের ভেরিফিকেশনের জন্য অটোমেটিক টিকিট তৈরি
-            $subject = "Payment Verification for " . $invoice['invoice_number'];
-            $message = "I have paid ৳" . $invoice['amount'] . " via bKash.\n\nMy bKash Number: $bkash_number\nTrxID: $trx_id\n\nPlease verify and approve my payment.";
-            $db->prepare("INSERT INTO tickets (user_id, subject, category, message, status) VALUES (?, ?, 'Billing Issue', ?, 'open')")->execute([$user_id, $subject, $message]);
+    if (isset($token_data['id_token'])) {
+        $id_token = $token_data['id_token'];
+        $_SESSION['bkash_token'] = $id_token; // টোকেনটি সেশনে সেভ করে রাখছি
 
-            // ৩. অ্যাডমিনকে নোটিফিকেশন পাঠানো
-            $adminQuery = $db->query("SELECT user_id FROM users WHERE role = 'admin' LIMIT 1")->fetch();
-            if ($adminQuery) {
-                $notif_msg = "💰 Payment Submitted: TrxID $trx_id received for {$invoice['invoice_number']}. Check Support Tickets to verify.";
-                $db->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)")->execute([$adminQuery['user_id'], $notif_msg]);
-            }
+        // ২. Create Payment API Call
+        $callback_url = BASE_URL . 'bkash_callback.php?invoice_id=' . $invoice_id;
 
-            $db->commit();
-            header("Location: user_dashboard.php?msg=payment_submitted");
+        // ফিক্স ১: ইনভয়েস নম্বরটিকে প্রতিবার ইউনিক করার জন্য শেষে টাইমস্ট্যাম্প যোগ করা
+        $unique_invoice_number = $invoice['invoice_number'] . '_' . time();
+
+        // ফিক্স ২: অ্যামাউন্টকে দশমিকের পর দুই ঘর (যেমন: 500.00) করা
+        $formatted_amount = number_format((float)$invoice['amount'], 2, '.', '');
+
+        $post_create = json_encode([
+            'mode' => '0011',
+            'payerReference' => '01711111111',
+            'callbackURL' => $callback_url,
+            'amount' => $formatted_amount,
+            'currency' => 'BDT',
+            'intent' => 'sale',
+            'merchantInvoiceNumber' => $unique_invoice_number
+        ]);
+
+        $url = BKASH_BASE_URL . '/tokenized/checkout/create';
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: ' . $id_token,
+            'X-APP-Key: ' . BKASH_APP_KEY
+        ]);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_create);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+        $create_response = curl_exec($ch);
+        curl_close($ch);
+
+        $create_data = json_decode($create_response, true);
+
+        if (isset($create_data['bkashURL'])) {
+            // ইউজারকে বিকাশের গেটওয়ে পেজে রিডাইরেক্ট করা হচ্ছে
+            header("Location: " . $create_data['bkashURL']);
             exit;
-        } catch (Exception $e) {
-            $db->rollBack();
-            $error_msg = "Something went wrong. Please try again.";
+        } else {
+            $error_msg = "bKash Payment Creation Failed. Reason: " . ($create_data['errorMessage'] ?? 'Unknown Error');
         }
+    } else {
+        $error_msg = "Failed to authenticate with bKash API.";
     }
 }
+
 include '../views/layouts/header.php';
 ?>
 
 <div class="bg-gray-50 min-h-screen py-12 flex items-center justify-center">
     <div class="container mx-auto max-w-lg px-4">
         <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-
             <div class="bg-gray-900 text-white p-6 text-center relative">
                 <a href="user_dashboard.php" class="absolute left-4 top-6 text-gray-400 hover:text-white transition"><i class="fa fa-arrow-left text-xl"></i></a>
-                <h2 class="text-2xl font-bold">Secure Payment</h2>
+                <h2 class="text-2xl font-bold">Automatic Checkout</h2>
                 <p class="text-gray-400 text-sm mt-1">Invoice: <?php echo htmlspecialchars($invoice['invoice_number']); ?></p>
             </div>
 
             <div class="p-8">
-                <div class="bg-pink-50 border border-pink-200 rounded-xl p-5 mb-6 text-center">
-                    <img src="https://freelogopng.com/images/all_img/1656234782bkash-app-logo.png" alt="bKash" class="h-10 mx-auto mb-3">
-                    <p class="text-gray-700 text-sm font-medium mb-1">Please Send Money or Make Payment to:</p>
-                    <h3 class="text-3xl font-black text-pink-600 tracking-wider">01711-000000</h3>
-                    <p class="text-gray-500 text-xs mt-1">(Personal / Merchant Account)</p>
+                <div class="bg-pink-50 border border-pink-200 rounded-xl p-6 mb-6 text-center">
+                    <img src="https://freelogopng.com/images/all_img/1656234782bkash-app-logo.png" alt="bKash" class="h-12 mx-auto mb-3">
+                    <p class="text-gray-600 text-sm font-medium">You will be redirected to secure bKash payment gateway portal.</p>
                 </div>
 
                 <div class="flex justify-between items-center bg-gray-100 p-5 rounded-xl mb-8 border border-gray-200">
@@ -92,21 +129,12 @@ include '../views/layouts/header.php';
                 </div>
 
                 <?php if ($error_msg): ?>
-                    <div class="bg-red-100 text-red-600 p-3 rounded mb-4 text-sm font-bold text-center border border-red-200"><i class="fa fa-exclamation-triangle mr-1"></i> <?php echo $error_msg; ?></div>
+                    <div class="bg-red-100 text-red-600 p-3 rounded mb-4 text-sm font-bold text-center border border-red-200"><?php echo $error_msg; ?></div>
                 <?php endif; ?>
 
-                <form action="" method="POST" class="space-y-5">
-                    <div>
-                        <label class="block text-gray-700 font-bold mb-2 text-sm">Your bKash Account Number</label>
-                        <input type="text" name="bkash_number" required placeholder="e.g., 01XXXXXXXXX" class="w-full border-gray-300 border px-4 py-3 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none font-semibold text-gray-800">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-bold mb-2 text-sm">Transaction ID (TrxID)</label>
-                        <input type="text" name="trx_id" required placeholder="e.g., 9F8A7B6C5D" class="w-full border-gray-300 border px-4 py-3 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none font-semibold text-gray-800 uppercase">
-                    </div>
-
-                    <button type="submit" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-4 rounded-xl shadow-lg transition mt-4 text-lg">
-                        <i class="fa fa-paper-plane mr-2"></i> Submit Payment Info
+                <form action="" method="POST">
+                    <button type="submit" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-4 rounded-xl shadow-lg transition text-lg flex items-center justify-center gap-2">
+                        <i class="fa fa-credit-card"></i> Pay Now with bKash
                     </button>
                 </form>
             </div>

@@ -25,42 +25,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upgrade_package_id']))
     $new_pkg = $packageModel->getById($new_pkg_id);
 
     if ($new_pkg) {
-        // চেক করা হচ্ছে কাস্টমারের আগে থেকেই কোনো আপগ্রেড রিকোয়েস্ট পেন্ডিং আছে কিনা
-        $checkTicket = $db->prepare("SELECT ticket_id FROM tickets WHERE user_id = ? AND category = 'Package Upgrade' AND status != 'resolved'");
-        $checkTicket->execute([$user_id]);
+        try {
+            $db->beginTransaction();
 
-        if ($checkTicket->rowCount() > 0) {
-            $error_msg = "You already have a pending upgrade request. Our team will contact you soon.";
-        } else {
-            try {
-                $db->beginTransaction();
+            // আগের কোনো পেন্ডিং আপগ্রেড টিকিট থাকলে তা অটোমেটিক ক্লোজ (resolved) করে দেওয়া
+            $db->prepare("UPDATE tickets SET status = 'resolved' WHERE user_id = ? AND category = 'Package Upgrade' AND status != 'resolved'")->execute([$user_id]);
 
-                // ১. সাপোর্ট টিকিট তৈরি
-                $subject = "Request to upgrade package to: " . $new_pkg['name'];
-                $message = "Customer requested an upgrade to " . $new_pkg['name'] . " (" . $new_pkg['speed_mbps'] . " Mbps). Invoice generated for ৳" . $new_pkg['price'] . ". Please review and activate the new package.";
+            // আগের কোনো আনপেইড আপগ্রেড ইনভয়েস থাকলে তা মুছে ফেলা (যাতে ইউজারের ড্যাশবোর্ডে ভুয়া বিল না জমে)
+            $db->prepare("DELETE FROM invoices WHERE user_id = ? AND invoice_number LIKE 'UPG-%' AND status = 'unpaid'")->execute([$user_id]);
 
-                $db->prepare("INSERT INTO tickets (user_id, subject, category, message, status) VALUES (?, ?, 'Package Upgrade', ?, 'open')")->execute([$user_id, $subject, $message]);
+            // ১. নতুন সাপোর্ট টিকিট তৈরি
+            $subject = "Request to upgrade package to: " . $new_pkg['name'];
+            $message = "Customer requested an upgrade to " . $new_pkg['name'] . " (" . $new_pkg['speed_mbps'] . " Mbps). Invoice generated for ৳" . $new_pkg['price'] . ". Please review and activate the new package.";
+            $db->prepare("INSERT INTO tickets (user_id, subject, category, message, status) VALUES (?, ?, 'Package Upgrade', ?, 'open')")->execute([$user_id, $subject, $message]);
 
-                // ২. নতুন ইনভয়েস তৈরি (Unpaid)
-                $inv_no = "UPG-" . strtoupper(uniqid());
-                $db->prepare("INSERT INTO invoices (user_id, subscription_id, invoice_number, amount, due_date, status) 
-                              SELECT ?, subscription_id, ?, ?, DATE_ADD(CURDATE(), INTERVAL 2 DAY), 'unpaid' 
-                              FROM subscriptions WHERE user_id = ? ORDER BY subscription_id DESC LIMIT 1")
-                    ->execute([$user_id, $inv_no, $new_pkg['price'], $user_id]);
+            // ২. নতুন ইনভয়েস তৈরি (Unpaid) - ইনভয়েস নম্বরের মাঝেই নতুন প্যাকেজ আইডি পুশ করা হলো
+            $inv_no = "UPG-" . $new_pkg_id . "-" . strtoupper(uniqid());
+            $db->prepare("INSERT INTO invoices (user_id, subscription_id, invoice_number, amount, due_date, status) 
+                          SELECT ?, subscription_id, ?, ?, DATE_ADD(CURDATE(), INTERVAL 2 DAY), 'unpaid' 
+                          FROM subscriptions WHERE user_id = ? ORDER BY subscription_id DESC LIMIT 1")
+                ->execute([$user_id, $inv_no, $new_pkg['price'], $user_id]);
 
-                // ৩. অ্যাডমিনকে নোটিফিকেশন পাঠানো
-                $adminQuery = $db->query("SELECT user_id FROM users WHERE role = 'admin' LIMIT 1")->fetch();
-                if ($adminQuery) {
-                    $notif_msg = "🚀 Upgrade & Invoice: " . $_SESSION['user_name'] . " requested to upgrade to " . $new_pkg['name'] . ". New invoice generated.";
-                    $db->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)")->execute([$adminQuery['user_id'], $notif_msg]);
-                }
-
-                $db->commit();
-                $success_msg = "Your upgrade request for '" . $new_pkg['name'] . "' has been submitted! An invoice has been generated. Please pay to activate the new speed.";
-            } catch (Exception $e) {
-                $db->rollBack();
-                $error_msg = "Something went wrong while processing your request. Please try again.";
+            // ৩. অ্যাডমিনকে নোটিফিকেশন পাঠানো
+            $adminQuery = $db->query("SELECT user_id FROM users WHERE role = 'admin' LIMIT 1")->fetch();
+            if ($adminQuery) {
+                $notif_msg = "🚀 Upgrade & Invoice: " . $_SESSION['user_name'] . " requested to upgrade to " . $new_pkg['name'] . ". New invoice generated.";
+                $db->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)")->execute([$adminQuery['user_id'], $notif_msg]);
             }
+
+            $db->commit();
+            $success_msg = "Your upgrade request for '" . $new_pkg['name'] . "' has been submitted! An invoice has been generated. Please pay to activate the new speed.";
+        } catch (Exception $e) {
+            $db->rollBack();
+            $error_msg = "Something went wrong while processing your request. Please try again.";
         }
     } else {
         $error_msg = "Invalid package selected.";

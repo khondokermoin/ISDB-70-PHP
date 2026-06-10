@@ -23,7 +23,8 @@ if (!isset($_SESSION['role']) && $user) {
 }
 
 // কাস্টমারের বর্তমান প্যাকেজ এবং সাবস্ক্রিপশন তথ্য আনা
-$query = "SELECT s.*, p.name as package_name, p.speed_mbps, p.price 
+$query = "SELECT s.*, p.name as package_name, p.speed_mbps, p.price,
+          DATEDIFF(s.end_date, CURDATE()) as days_left 
           FROM subscriptions s 
           JOIN packages p ON s.package_id = p.package_id 
           WHERE s.user_id = :uid ORDER BY s.subscription_id DESC LIMIT 1";
@@ -117,16 +118,19 @@ $assigned_tech = $techQuery->fetch(PDO::FETCH_ASSOC);
                         <div class="mt-8 bg-gray-50 border border-gray-200 p-5 rounded-lg">
                             <p class="text-gray-600 font-semibold mb-2">Expiry Information:</p>
                             <?php if ($sub['status'] == 'active' && !empty($sub['end_date'])):
-                                // 🔥 দিনের সঠিক ক্যালকুলেশন (Date Object ব্যবহার করে)
-                                $today = new DateTime(date('Y-m-d'));
-                                $expiry = new DateTime($sub['end_date']);
-                                $interval = $today->diff($expiry);
-                                $days_left = $interval->format('%r%a'); // পজিটিভ বা নেগেটিভ দিন বের করবে
+                                // ডাটাবেস থেকে পাওয়া সরাসরি দিনের হিসাব
+                                $days_left = (int)$sub['days_left'];
                             ?>
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm text-gray-600">Valid Until: <strong><?php echo date("d M Y", strtotime($sub['end_date'])); ?></strong></span>
                                     <span class="text-xl font-extrabold <?php echo ($days_left <= 3) ? 'text-red-600' : 'text-green-600'; ?>">
-                                        <?php echo ($days_left > 0) ? $days_left . ' Days Remaining' : 'Expired'; ?>
+                                        <?php if ($days_left > 0): ?>
+                                            <?php echo $days_left; ?> Days Remaining
+                                        <?php elseif ($days_left == 0): ?>
+                                            Expires Today
+                                        <?php else: ?>
+                                            Expired
+                                        <?php endif; ?>
                                     </span>
                                 </div>
                             <?php else: ?>
