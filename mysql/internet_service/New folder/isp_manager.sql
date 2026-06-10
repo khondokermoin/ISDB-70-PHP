@@ -40,8 +40,35 @@ CREATE TABLE `coverage_zones` (
 -- Dumping data for table `coverage_zones`
 --
 
-INSERT INTO `coverage_zones` (`id`, `district`, `upazila`, `description`, `status`, `created_at`) VALUES
-(1, 'Dhaka', 'Dhanmondi', 'laksjdfoiauwer;lsdjfc', 'active', '2026-05-12 05:54:03');
+/* INSERT INTO `coverage_zones` (`id`, `district`, `upazila`, `description`, `status`, `created_at`) VALUES
+(1, 'Dhaka', 'Dhanmondi', 'laksjdfoiauwer;lsdjfc', 'active', '2026-05-12 05:54:03'); */
+
+INSERT INTO `coverage_zones` (`id`, `district`, `upazila`, `description`, `status`, `created_at`)
+VALUES 
+(1, 'Dhaka', 'Dhanmondi', 'Residential and commercial area with hospitals, universities, and shopping centers.', 'active', '2026-05-12 05:54:03'),
+
+(2, 'Dhaka', 'Banani', 'High-end commercial zone with corporate offices, restaurants, and luxury apartments.', 'active', '2026-05-12 05:54:03'),
+
+(3, 'Dhaka', 'Gulshan', 'Diplomatic and corporate area with embassies, offices, and premium residences.', 'active', '2026-05-12 05:54:03'),
+
+(4, 'Dhaka', 'Uttara', 'Large residential zone near airport with schools, markets, and transport hubs.', 'active', '2026-05-12 05:54:03'),
+
+(5, 'Dhaka', 'Mirpur', 'Dense residential area with stadium, markets, and industrial zones.', 'active', '2026-05-12 05:54:03'),
+
+(6, 'Dhaka', 'Mohammadpur', 'Residential area with schools, hospitals, and local markets.', 'active', '2026-05-12 05:54:03'),
+
+(7, 'Chattogram', 'Agrabad', 'Main business hub with banks, offices, and commercial centers.', 'active', '2026-05-12 05:54:03'),
+
+(8, 'Chattogram', 'Halishahar', 'Residential and semi-industrial area with housing and local markets.', 'active', '2026-05-12 05:54:03'),
+
+(9, 'Chattogram', 'Pahartali', 'Port-connected industrial and residential zone.', 'active', '2026-05-12 05:54:03'),
+
+(10, 'Sylhet', 'Zindabazar', 'Main commercial area with shops, hotels, and business centers.', 'active', '2026-05-12 05:54:03'),
+
+(11, 'Rajshahi', 'Boalia', 'Administrative and residential urban area with offices and schools.', 'active', '2026-05-12 05:54:03'),
+
+(12, 'Khulna', 'Sonadanga', 'Commercial area with markets, offices, and transport facilities.', 'active', '2026-05-12 05:54:03');
+
 
 -- --------------------------------------------------------
 

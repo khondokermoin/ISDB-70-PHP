@@ -42,7 +42,7 @@ include '../views/layouts/header.php';
             <?php endif; ?>
         </div>
     </div>
-</section>
+</section> 
 <section class="py-16 bg-white">
     <div class="container mx-auto max-w-6xl px-4">
         <div class="text-center mb-12">
@@ -51,16 +51,19 @@ include '../views/layouts/header.php';
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="p-6 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition text-center">
+            <!-- Corporate Internet -->
+            <div onclick="window.location.href='corporate.php';" class="p-6 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition text-center">
                 <i class="fa fa-network-wired text-4xl text-amberRed mb-4"></i>
                 <h3 class="text-xl font-bold mb-2">Corporate Internet</h3>
                 <p class="text-gray-600 text-sm">Safe internet access services with various service level descriptions for corporate businesses.</p>
             </div>
-            <div class="p-6 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition text-center">
+            <!-- Home Internet -->
+            <div onclick="window.location.href='home_internet.php';" class="p-6 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition text-center">
                 <i class="fa fa-home text-4xl text-amberRed mb-4"></i>
                 <h3 class="text-xl font-bold mb-2">Home Internet</h3>
                 <p class="text-gray-600 text-sm">Extensive range of high quality data & internet connectivity services throughout the country.</p>
             </div>
+            <!-- Hosting & Dev -->
             <div class="p-6 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition text-center">
                 <i class="fa fa-server text-4xl text-amberRed mb-4"></i>
                 <h3 class="text-xl font-bold mb-2">Hosting & Dev</h3>
