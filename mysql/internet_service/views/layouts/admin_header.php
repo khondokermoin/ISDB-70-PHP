@@ -423,6 +423,61 @@ if (isset($db) && isset($_SESSION['user_id'])) {
                         alert("Failed to mark notifications as read. Please try again.");
                     });
             }
+
+            // ── 6. 🔥 AUTO-REFRESH NOTIFICATION BADGE (প্রতি ৩০ সেকেন্ড) ─────
+            // নতুন notification এলে badge auto-update হবে, পেজ refresh করতে হবে না
+            function refreshNotificationBadge() {
+                fetch('admin.php?action=get_unread_count')
+                    .then(res => {
+                        if (!res.ok) throw new Error('Network response was not ok');
+                        return res.json();
+                    })
+                    .then(data => {
+                        const badge = document.getElementById('notifBadge');
+                        const newCount = parseInt(data.unread) || 0;
+
+                        if (newCount > 0) {
+                            if (badge) {
+                                // আগে কত ছিল সেটা দেখি
+                                const oldCount = parseInt(badge.textContent) || 0;
+
+                                // নতুন notification এলে pulse effect
+                                if (newCount > oldCount) {
+                                    badge.classList.add('animate-pulse');
+                                    setTimeout(() => badge.classList.remove('animate-pulse'), 2000);
+                                }
+
+                                badge.textContent = newCount;
+                                badge.style.display = 'inline-block';
+                            } else {
+                                // Badge না থাকলে নতুন করে তৈরি করি
+                                const bell = document.querySelector('button[onclick="toggleNotifModal()"]');
+                                if (bell) {
+                                    const newBadge = document.createElement('span');
+                                    newBadge.id = 'notifBadge';
+                                    newBadge.className = 'absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white animate-pulse';
+                                    newBadge.textContent = newCount;
+                                    bell.appendChild(newBadge);
+
+                                    setTimeout(() => newBadge.classList.remove('animate-pulse'), 2000);
+                                }
+                            }
+                        } else {
+                            // সব পড়া হয়ে গেলে badge লুকিয়ে ফেলি
+                            if (badge) badge.style.display = 'none';
+                        }
+                    })
+                    .catch(err => {
+                        // Silent fail — user-কে বিরক্ত করব না, শুধু console-এ লিখব
+                        console.warn('Notification refresh failed:', err.message);
+                    });
+            }
+
+            // 🔁 প্রতি ৩০ সেকেন্ড পর পর check করবে
+            setInterval(refreshNotificationBadge, 30000);
+
+            // ⚡ পেজ লোড হওয়ার ৫ সেকেন্ড পর প্রথমবার check (যদি এই সময়ে নতুন notification আসে)
+            setTimeout(refreshNotificationBadge, 5000);
         </script>
 
         <main class="p-4 md:p-6 flex-1 overflow-y-auto custom-scrollbar bg-gray-100">
