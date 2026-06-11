@@ -251,7 +251,7 @@ if ($action == 'mark_paid' && isset($_GET['id'])) {
     $inv_id = (int)$_GET['id'];
 
     $inv = $db->prepare("
-        SELECT i.user_id, i.amount, i.subscription_id, s.end_date, p.duration_days 
+        SELECT i.user_id, i.amount, i.subscription_id, i.invoice_number, s.end_date, p.duration_days, p.package_id 
         FROM invoices i 
         JOIN subscriptions s ON i.subscription_id = s.subscription_id 
         JOIN packages p ON s.package_id = p.package_id 
@@ -261,25 +261,62 @@ if ($action == 'mark_paid' && isset($_GET['id'])) {
     $invData = $inv->fetch();
 
     if ($invData) {
+        // ১. ইনভয়েস পেইড করা
         $db->prepare("UPDATE invoices SET status = 'paid' WHERE invoice_id = ?")->execute([$inv_id]);
+        
+        // ২. ক্যাশ পেমেন্ট রেকর্ড ইনসার্ট করা
         $db->prepare("
             INSERT INTO payments (invoice_id, user_id, amount, method, transaction_ref) 
             VALUES (?, ?, ?, 'Cash', 'RENEWAL')
         ")->execute([$inv_id, $invData['user_id'], $invData['amount']]);
 
-        $current_expiry = $invData['end_date'];
-        $base_date = ($current_expiry && strtotime($current_expiry) > time()) ? $current_expiry : date('Y-m-d');
+        $target_package_id = $invData['package_id'];
+        $duration_days = $invData['duration_days'];
+        $is_upgrade = (strpos($invData['invoice_number'], 'UPG-') === 0);
 
-        $db->prepare("
-            UPDATE subscriptions 
-            SET status = 'active', end_date = DATE_ADD(?, INTERVAL ? DAY) 
-            WHERE subscription_id = ?
-        ")->execute([$base_date, $invData['duration_days'], $invData['subscription_id']]);
+        if ($is_upgrade) {
+            // আপগ্রেড লজিক: প্যাকেজ পরিবর্তন হবে এবং মেয়াদ "আজ থেকে" শুরু হবে
+            $invoice_parts = explode('-', $invData['invoice_number']);
+            $new_pkg_id = (isset($invoice_parts[1])) ? (int)$invoice_parts[1] : $target_package_id;
+            
+            $pkgStmt = $db->prepare("SELECT duration_days FROM packages WHERE package_id = ?");
+            $pkgStmt->execute([$new_pkg_id]);
+            $newPkg = $pkgStmt->fetch();
+            $duration_days = $newPkg ? $newPkg['duration_days'] : 30;
 
+            // সাবস্ক্রিপশনে নতুন প্যাকেজ আইডি আপডেট
+            $db->prepare("
+                UPDATE subscriptions 
+                SET package_id = ?, status = 'active', start_date = CURDATE(), end_date = DATE_ADD(CURDATE(), INTERVAL ? DAY) 
+                WHERE subscription_id = ?
+            ")->execute([$new_pkg_id, $duration_days, $invData['subscription_id']]);
+
+            // ইনভয়েসের period আপডেট
+            $db->prepare("UPDATE invoices SET period_start = CURDATE(), period_end = DATE_ADD(CURDATE(), INTERVAL ? DAY) WHERE invoice_id = ?")
+               ->execute([$duration_days, $inv_id]);
+            
+            // সাপোর্ট টিকিট অটো-ক্লোজ করা
+            $db->prepare("UPDATE tickets SET status = 'resolved' WHERE user_id = ? AND category = 'Package Upgrade' AND status != 'resolved'")
+               ->execute([$invData['user_id']]);
+        } else {
+            // সাধারণ রিনিউ লজিক
+            $current_expiry = $invData['end_date'];
+            $base_date = ($current_expiry && strtotime($current_expiry) > time()) ? $current_expiry : date('Y-m-d');
+
+            $db->prepare("
+                UPDATE subscriptions 
+                SET status = 'active', end_date = DATE_ADD(?, INTERVAL ? DAY) 
+                WHERE subscription_id = ?
+            ")->execute([$base_date, $duration_days, $invData['subscription_id']]);
+
+            $db->prepare("UPDATE invoices SET period_start = ?, period_end = DATE_ADD(?, INTERVAL ? DAY) WHERE invoice_id = ?")
+               ->execute([$base_date, $base_date, $duration_days, $inv_id]);
+        }
+
+        // ইউজার স্ট্যাটাস একটিভ করা
         $db->prepare("UPDATE users SET status = 'active' WHERE user_id = ?")->execute([$invData['user_id']]);
     }
 
-    // FIX #5: Correct ? vs & in redirect URL
     $base_redirect = (basename($_SERVER['PHP_SELF']) == 'admin.php') ? 'admin.php?page=billings' : 'staff_dashboard.php';
     $separator = (strpos($base_redirect, '?') !== false) ? '&' : '?';
     header("Location: $base_redirect{$separator}msg=renewed");
