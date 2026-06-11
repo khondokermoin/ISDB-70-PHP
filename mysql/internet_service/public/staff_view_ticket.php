@@ -22,11 +22,16 @@ if (isset($_GET['new_status'])) {
     $status = $_GET['new_status'];
     $db->prepare("UPDATE tickets SET status = ? WHERE ticket_id = ?")->execute([$status, $ticket_id]);
 
-    // যদি কাজ Resolved হয়, অ্যাডমিনকে নোটিফিকেশন পাঠাবে
+
+    // যদি কাজ Resolved হয়, অ্যাডমিনকে নোটিফিকেশন পাঠাবে
     if ($status == 'resolved') {
         $adminQuery = $db->query("SELECT user_id FROM users WHERE role = 'admin' LIMIT 1")->fetch();
         if ($adminQuery) {
-            $notif_msg = "✅ Job Completed: Ticket #{$ticket_id} has been marked as resolved by Technician. Please review or ACTIVATE the line.";
+            // টেকনিশিয়ান এবং কাস্টমারের নাম যুক্ত করা হলো
+            $tech_name = $_SESSION['user_name'] ?? 'Tech ID: ' . $staff_id;
+            $customer_name = $ticket['customer_name'] ?? 'Customer';
+
+            $notif_msg = "✅ Job Completed: Ticket #{$ticket_id} (Customer: {$customer_name}) resolved by Tech: {$tech_name}. Please review or ACTIVATE.";
             $db->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)")->execute([$adminQuery['user_id'], $notif_msg]);
         }
     }

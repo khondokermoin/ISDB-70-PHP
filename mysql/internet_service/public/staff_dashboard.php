@@ -10,38 +10,43 @@ $db = (new Database())->getConnection();
 $staff_id = $_SESSION['user_id'];
 $designation = $_SESSION['designation'] ?? '';
 
+// =====================================
+// 🔥 NOTIFICATION ACTIONS (Mark as read)
+// =====================================
+if (isset($_GET['action'])) {
+    if ($_GET['action'] === 'mark_notifs_read') {
+        $db->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?")->execute([$staff_id]);
+        header("Location: staff_dashboard.php");
+        exit;
+    }
+    if ($_GET['action'] === 'read_and_redirect' && isset($_GET['notif_id'])) {
+        $nid = (int)$_GET['notif_id'];
+        $db->prepare("UPDATE notifications SET is_read = 1 WHERE notification_id = ? AND user_id = ?")->execute([$nid, $staff_id]);
+        header("Location: staff_dashboard.php");
+        exit;
+    }
+}
+
+// =====================================
+// 🔥 LOAD ALL NOTIFICATIONS FOR MODAL
+// =====================================
+$allNotifs   = [];
+$unreadCount = 0;
+
+$notifStmt = $db->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY sent_at DESC LIMIT 50");
+$notifStmt->execute([$staff_id]);
+$allNotifs = $notifStmt->fetchAll(PDO::FETCH_ASSOC);
+
+foreach ($allNotifs as $n) {
+    if (isset($n['is_read']) && $n['is_read'] == 0) {
+        $unreadCount++;
+    }
+}
+
 $unpaid_invoices = [];
 $pending_works = [];
 $active_users = 0;
 $counts = ['todays_tasks' => 0, 'total_pending' => 0, 'total_resolved' => 0];
-
-// 🔥 স্মার্ট আপডেট: শুধুমাত্র গত ২৪ ঘণ্টার নতুন নোটিফিকেশন দেখাবে
-/* $notifQuery = $db->prepare("SELECT message FROM notifications WHERE user_id = :uid AND sent_at >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY sent_at DESC LIMIT 1");
-$notifQuery->execute([':uid' => $staff_id]);
-$notification = $notifQuery->fetch(PDO::FETCH_ASSOC); */
-
-// update staf notification fix errors
-// এখানে নতুন notification code paste করো
-$notifQuery = $db->prepare("
-    SELECT notification_id, message
-    FROM notifications
-    WHERE user_id = :uid
-      AND is_read = 0
-      AND sent_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)
-    ORDER BY sent_at DESC
-    LIMIT 1
-");
-$notifQuery->execute([':uid' => $staff_id]);
-$notification = $notifQuery->fetch(PDO::FETCH_ASSOC);
-
-if ($notification) {
-    $markRead = $db->prepare("
-        UPDATE notifications
-        SET is_read = 1
-        WHERE notification_id = ?
-    ");
-    $markRead->execute([$notification['notification_id']]);
-}
 
 // =====================================
 // 🔥 BILLING MANAGER LOGIC
@@ -113,13 +118,40 @@ else {
     <title>My Works - Staff Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes fade-in-down {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in-down {
+            animation: fade-in-down 0.3s ease-out;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-100 font-sans">
-    <nav class="bg-gray-900 text-white p-4 shadow-lg sticky top-0 z-50">
+    <nav class="bg-gray-900 text-white p-4 shadow-lg sticky top-0 z-40">
         <div class="container mx-auto flex justify-between items-center">
             <h1 class="text-xl font-bold text-red-500">AMAR IT <span class="text-gray-400 text-sm font-normal">| <?php echo $designation ? htmlspecialchars($designation) : 'Technician'; ?> Portal</span></h1>
             <div class="flex items-center space-x-4">
+                <!-- Bell Icon with Unread Badge -->
+                <button onclick="toggleNotifModal()" class="relative text-gray-300 hover:text-red-400 transition p-1">
+                    <i class="fa fa-bell text-xl"></i>
+                    <?php if ($unreadCount > 0): ?>
+                        <span class="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-gray-900 animate-pulse">
+                            <?php echo $unreadCount; ?>
+                        </span>
+                    <?php endif; ?>
+                </button>
+
                 <span class="text-sm hidden md:block">Hello, <strong><?php echo htmlspecialchars($_SESSION['user_name']); ?></strong></span>
                 <a href="logout.php" class="bg-red-600 px-4 py-1.5 rounded text-sm font-bold hover:bg-red-700 transition">Logout</a>
                 <a href="staff_profile_edit.php" class="text-blue-400 hover:text-blue-300 text-sm font-bold mr-4"><i class="fa fa-user-edit"></i> Edit Profile</a>
@@ -127,17 +159,99 @@ else {
         </div>
     </nav>
 
-    <div class="container mx-auto max-w-6xl py-8 px-4">
+    <!-- ===== NOTIFICATION MODAL ===== -->
+    <div id="notifModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-center items-center">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden animate-fade-in-down">
 
-        <?php if ($notification): ?>
-            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm flex items-start animate-fade-in-down">
-                <i class="fa fa-bell text-xl mr-3 mt-1 animate-pulse"></i>
-                <div>
-                    <h4 class="font-bold">New Notification!</h4>
-                    <p class="text-sm"><?php echo htmlspecialchars($notification['message']); ?></p>
-                </div>
+            <!-- Modal Header -->
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-bold text-gray-800">
+                    <i class="fa fa-bell text-red-500 mr-2"></i> My Notifications
+                </h3>
+                <button onclick="toggleNotifModal()" class="text-gray-400 hover:text-red-500 transition">
+                    <i class="fa fa-times text-2xl"></i>
+                </button>
             </div>
-        <?php endif; ?>
+
+            <!-- Notification List -->
+            <div class="p-4 overflow-y-auto flex-1 bg-gray-50">
+                <?php if (count($allNotifs) > 0): ?>
+                    <ul class="space-y-3">
+                        <?php foreach ($allNotifs as $n):
+                            $isUnread = isset($n['is_read']) && $n['is_read'] == 0;
+                            $msgLower = strtolower($n['message']);
+                            $notifId  = isset($n['notification_id']) ? (int)$n['notification_id'] : 0;
+                        ?>
+                            <li class="rounded-lg border transition-all duration-300 shadow-sm <?php echo $isUnread ? 'bg-white border-red-200 shadow-md' : 'bg-gray-50 border-gray-200 opacity-75'; ?>">
+                                <a href="staff_dashboard.php?action=read_and_redirect&notif_id=<?php echo $notifId; ?>" class="block p-4 group">
+                                    <div class="flex items-start">
+                                        <!-- Dynamic Icon -->
+                                        <div class="<?php echo $isUnread ? 'bg-red-100 text-red-600' : 'bg-gray-200 text-gray-500'; ?> rounded-full w-9 h-9 flex items-center justify-center mr-3 flex-shrink-0 transition-colors">
+                                            <?php if (strpos($msgLower, 'payment') !== false || strpos($msgLower, 'bill') !== false): ?>
+                                                <i class="fa fa-hand-holding-dollar text-sm"></i>
+                                            <?php elseif (strpos($msgLower, 'ticket') !== false || strpos($msgLower, 'job') !== false || strpos($msgLower, 'task') !== false): ?>
+                                                <i class="fa fa-headset text-sm"></i>
+                                            <?php elseif (strpos($msgLower, 'upgrade') !== false): ?>
+                                                <i class="fa fa-arrow-up text-sm"></i>
+                                            <?php elseif (strpos($msgLower, 'complaint') !== false || strpos($msgLower, 'issue') !== false): ?>
+                                                <i class="fa fa-triangle-exclamation text-sm"></i>
+                                            <?php else: ?>
+                                                <i class="fa fa-bolt text-sm"></i>
+                                            <?php endif; ?>
+                                        </div>
+
+                                        <!-- Message + Timestamp -->
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium leading-tight <?php echo $isUnread ? 'text-gray-800' : 'text-gray-500'; ?>">
+                                                <?php echo htmlspecialchars($n['message']); ?>
+                                            </p>
+                                            <span class="text-[10px] text-gray-400 mt-1 flex items-center">
+                                                <i class="fa fa-clock mr-1"></i>
+                                                <?php echo isset($n['sent_at']) ? date("d M Y, h:i A", strtotime($n['sent_at'])) : 'Just now'; ?>
+                                            </span>
+                                        </div>
+
+                                        <!-- Unread red dot -->
+                                        <?php if ($isUnread): ?>
+                                            <span class="ml-2 mt-1.5 w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <div class="text-center py-10">
+                        <i class="fa fa-inbox text-5xl text-gray-300 mb-3"></i>
+                        <p class="text-gray-500 font-semibold">No notifications found.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Modal Footer: Mark All Read -->
+            <?php if ($unreadCount > 0): ?>
+                <div class="p-3 bg-white text-center border-t border-gray-200">
+                    <a href="staff_dashboard.php?action=mark_notifs_read" class="text-sm font-bold text-blue-600 hover:text-blue-800 transition">
+                        <i class="fa fa-check-double mr-1"></i> Mark all as read
+                    </a>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <script>
+        function toggleNotifModal() {
+            const modal = document.getElementById('notifModal');
+            modal.classList.toggle('hidden');
+        }
+
+        // Close modal when clicking backdrop
+        document.getElementById('notifModal').addEventListener('click', function(e) {
+            if (e.target === this) toggleNotifModal();
+        });
+    </script>
+
+    <div class="container mx-auto max-w-6xl py-8 px-4">
 
         <?php if ($designation === 'Billing Manager'): ?>
             <div class="mb-8 flex justify-between items-center border-b pb-4">

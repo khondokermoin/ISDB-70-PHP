@@ -128,7 +128,7 @@ if (isset($db) && isset($_SESSION['user_id'])) {
 
                                 // ✅ FIX: Safely read notification ID — works with both 'id' and 'notification_id' column names
                                 $notifId = isset($n['notification_id']) ? (int)$n['notification_id']
-                                         : (isset($n['id'])            ? (int)$n['id'] : 0);
+                                    : (isset($n['id'])            ? (int)$n['id'] : 0);
                             ?>
                                 <li class="rounded-lg border transition-all duration-300 shadow-sm <?php echo $isUnread ? 'bg-white border-red-200 shadow-md' : 'bg-gray-50 border-gray-200 opacity-75'; ?>">
 

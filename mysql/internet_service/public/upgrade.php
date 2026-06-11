@@ -46,10 +46,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upgrade_package_id']))
                           FROM subscriptions WHERE user_id = ? ORDER BY subscription_id DESC LIMIT 1")
                 ->execute([$user_id, $inv_no, $new_pkg['price'], $user_id]);
 
+
             // ৩. অ্যাডমিনকে নোটিফিকেশন পাঠানো
             $adminQuery = $db->query("SELECT user_id FROM users WHERE role = 'admin' LIMIT 1")->fetch();
             if ($adminQuery) {
-                $notif_msg = "🚀 Upgrade & Invoice: " . $_SESSION['user_name'] . " requested to upgrade to " . $new_pkg['name'] . ". New invoice generated.";
+                $customer_name = $_SESSION['user_name'] ?? 'Customer';
+                $notif_msg = "🚀 Upgrade & Invoice: {$customer_name} requested to upgrade to {$new_pkg['name']}. Invoice #{$inv_no} generated.";
                 $db->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)")->execute([$adminQuery['user_id'], $notif_msg]);
             }
 

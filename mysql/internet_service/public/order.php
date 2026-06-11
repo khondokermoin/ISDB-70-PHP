@@ -97,7 +97,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // 🔥 MAGIC: Admin Notification (নতুন কাস্টমার আসলে অ্যাডমিনকে জানানো)
         $adminQuery = $db->query("SELECT user_id FROM users WHERE role = 'admin' LIMIT 1")->fetch();
         if ($adminQuery) {
-            $notif_msg = "🔥 New Order: " . $full_name . " has requested a new internet connection. Please assign a technician from 'Manage Customers'.";
+            $package_name = $package['name'] ?? 'Custom Package';
+            $notif_msg = "🔥 New Order: {$full_name} requested a new connection (Package: {$package_name}). Please assign a tech from 'Manage Customers'.";
             $db->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)")->execute([$adminQuery['user_id'], $notif_msg]);
         }
 
