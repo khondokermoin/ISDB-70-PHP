@@ -1,5 +1,6 @@
 <?php
 session_start();
+
 // ইউজার লগইন করা না থাকলে হোমপেজে পাঠিয়ে দেবে
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
@@ -12,18 +13,32 @@ $db = $database->getConnection();
 $user_id = $_SESSION['user_id'];
 
 // ইউজার প্রোফাইল ডাটা আনা
-$userQuery = "SELECT * FROM users WHERE user_id = :uid";
-$stmtUser = $db->prepare($userQuery);
+// FIX #13: SELECT * এর বদলে নির্দিষ্ট column (performance + security)
+$userQuery = "SELECT user_id, full_name, email, phone, address, role FROM users WHERE user_id = :uid";
+$stmtUser  = $db->prepare($userQuery);
 $stmtUser->execute([':uid' => $user_id]);
 $user = $stmtUser->fetch(PDO::FETCH_ASSOC);
 
-// সেশনে 'role' মিসিং থাকলে ডাটাবেস থেকে অটোমেটিক বসিয়ে দেবে
-if (!isset($_SESSION['role']) && $user) {
-    $_SESSION['role'] = $user['role'];
+// FIX #2: $user null হলে session destroy করে login পেজে পাঠাও — নাহলে PHP fatal error
+if (!$user) {
+    session_destroy();
+    header("Location: index.php");
+    exit;
+}
+
+// FIX #14: সবসময় DB থেকে role refresh করো (stale session এড়াতে)
+$_SESSION['role'] = $user['role'];
+
+// FIX #4: শুধুমাত্র customer role-এর জন্য এই পেজ accessible
+if ($_SESSION['role'] !== 'customer') {
+    header("Location: ../admin/dashboard.php");
+    exit;
 }
 
 // কাস্টমারের বর্তমান প্যাকেজ এবং সাবস্ক্রিপশন তথ্য আনা
-$query = "SELECT s.*, p.name as package_name, p.speed_mbps, p.price,
+// FIX #13: SELECT * এর বদলে নির্দিষ্ট column
+$query = "SELECT s.subscription_id, s.status, s.end_date, s.package_id, s.user_id,
+          p.name as package_name, p.speed_mbps, p.price,
           DATEDIFF(s.end_date, CURDATE()) as days_left 
           FROM subscriptions s 
           JOIN packages p ON s.package_id = p.package_id 
@@ -32,14 +47,22 @@ $stmt = $db->prepare($query);
 $stmt->execute([':uid' => $user_id]);
 $sub = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// 🔥 আপডেট ১: শুধুমাত্র বকেয়া (Unpaid) ইনভয়েস আনা
-$unpaidInvQuery = "SELECT * FROM invoices WHERE user_id = :uid AND status IN ('unpaid', 'pending') ORDER BY created_at DESC";
+// শুধুমাত্র বকেয়া (Unpaid) ইনভয়েস আনা
+$unpaidInvQuery = "SELECT invoice_id, invoice_number, amount, due_date, status
+                   FROM invoices
+                   WHERE user_id = :uid AND status IN ('unpaid', 'pending')
+                   ORDER BY created_at DESC";
 $stmtUnpaid = $db->prepare($unpaidInvQuery);
 $stmtUnpaid->execute([':uid' => $user_id]);
 $unpaid_invoices = $stmtUnpaid->fetchAll(PDO::FETCH_ASSOC);
 
-// 🔥 আপডেট ২: সব ইনভয়েস হিস্ট্রি আনা (Payment History এর জন্য)
-$allInvQuery = "SELECT * FROM invoices WHERE user_id = :uid ORDER BY created_at DESC";
+// FIX #5: Payment History — শুধুমাত্র PAID invoices দেখাবে
+// Unpaid/pending ইতিমধ্যে ওপরে "Pending Payments" section-এ দেখানো হচ্ছে,
+// তাই এখানে আবার দেখালে duplicate হয় এবং user বিভ্রান্ত হয়।
+$allInvQuery = "SELECT invoice_number, created_at, amount, status
+                FROM invoices
+                WHERE user_id = :uid AND status = 'paid'
+                ORDER BY created_at DESC";
 $stmtAll = $db->prepare($allInvQuery);
 $stmtAll->execute([':uid' => $user_id]);
 $invoice_history = $stmtAll->fetchAll(PDO::FETCH_ASSOC);
@@ -57,6 +80,19 @@ $techQuery = $db->prepare("SELECT t.ticket_id, t.category, s.full_name as staff_
                            ORDER BY t.created_at DESC LIMIT 1");
 $techQuery->execute([':uid' => $user_id]);
 $assigned_tech = $techQuery->fetch(PDO::FETCH_ASSOC);
+
+// FIX #12: WhatsApp-এর জন্য phone number sanitize করো
+// Leading '0' বা existing country code (+880/880) strip করে সঠিক 88XXXXXXXXXX format বানাও
+function buildWhatsAppNumber(string $phone): string {
+    $phone = preg_replace('/\D/', '', $phone); // শুধু digit রাখো
+    if (str_starts_with($phone, '880')) {
+        return $phone;                          // ইতিমধ্যে country code আছে
+    }
+    if (str_starts_with($phone, '0')) {
+        return '88' . substr($phone, 1);        // leading 0 → 88
+    }
+    return '88' . $phone;                       // bare number → 88 prefix
+}
 ?>
 
 <!DOCTYPE html>
@@ -75,7 +111,9 @@ $assigned_tech = $techQuery->fetch(PDO::FETCH_ASSOC);
         <div class="container mx-auto max-w-6xl flex justify-between items-center">
             <h1 class="text-2xl font-bold text-red-600">AMAR <span class="text-gray-800">IT</span> <span class="text-gray-400 text-sm font-normal">| Client Portal</span></h1>
             <div class="flex items-center space-x-4">
-                <span class="text-gray-700 hidden md:block">Welcome, <strong><?php echo htmlspecialchars($_SESSION['user_name']); ?></strong></span>
+                <!-- FIX #6: $_SESSION['user_name'] এর বদলে DB থেকে আসা $user['full_name'] ব্যবহার করো -->
+                <!-- এতে profile update করলে navbar-এও সাথে সাথে নতুন নাম দেখাবে -->
+                <span class="text-gray-700 hidden md:block">Welcome, <strong><?php echo htmlspecialchars($user['full_name']); ?></strong></span>
                 <a href="logout.php" class="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded font-semibold hover:bg-red-100 transition">Logout</a>
             </div>
         </div>
@@ -104,34 +142,39 @@ $assigned_tech = $techQuery->fetch(PDO::FETCH_ASSOC);
                             <div>
                                 <p class="text-gray-500 text-sm">Package Plan</p>
                                 <h2 class="text-2xl font-bold text-gray-800 uppercase"><?php echo htmlspecialchars($sub['package_name']); ?></h2>
-                                <p class="text-gray-500 text-sm mt-1">Speed: <?php echo ($sub['speed_mbps'] == 0) ? 'Custom' : $sub['speed_mbps'] . ' Mbps'; ?></p>
+                                <!-- FIX #15: == 0 এর বদলে empty() ব্যবহার করো — NULL-ও ধরবে -->
+                                <p class="text-gray-500 text-sm mt-1">Speed: <?php echo empty($sub['speed_mbps']) ? 'Custom' : $sub['speed_mbps'] . ' Mbps'; ?></p>
                             </div>
                             <div class="text-right">
                                 <p class="text-gray-500 text-sm mb-1">Connection Status</p>
                                 <span class="px-4 py-1 rounded-full text-xs font-bold <?php echo ($sub['status'] == 'active') ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-orange-100 text-orange-700 border border-orange-300'; ?>">
-                                    <?php echo strtoupper($sub['status']); ?>
+                                    <?php echo strtoupper(htmlspecialchars($sub['status'])); ?>
                                 </span>
                             </div>
                         </div>
 
-
                         <div class="mt-8 bg-gray-50 border border-gray-200 p-5 rounded-lg">
                             <p class="text-gray-600 font-semibold mb-2">Expiry Information:</p>
                             <?php if ($sub['status'] == 'active' && !empty($sub['end_date'])):
-                                // ডাটাবেস থেকে পাওয়া সরাসরি দিনের হিসাব
-                                $days_left = (int)$sub['days_left'];
+                                // FIX #7: days_left NULL হলে (int)NULL = 0 হয়ে "Expires Today" দেখাত।
+                                // এখন null check করে null হলে আলাদা message দেখাবে।
+                                $days_left = ($sub['days_left'] !== null) ? (int)$sub['days_left'] : null;
                             ?>
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm text-gray-600">Valid Until: <strong><?php echo date("d M Y", strtotime($sub['end_date'])); ?></strong></span>
-                                    <span class="text-xl font-extrabold <?php echo ($days_left <= 3) ? 'text-red-600' : 'text-green-600'; ?>">
-                                        <?php if ($days_left > 0): ?>
-                                            <?php echo $days_left; ?> Days Remaining
-                                        <?php elseif ($days_left == 0): ?>
-                                            Expires Today
-                                        <?php else: ?>
-                                            Expired
-                                        <?php endif; ?>
-                                    </span>
+                                    <?php if ($days_left !== null): ?>
+                                        <span class="text-xl font-extrabold <?php echo ($days_left <= 3) ? 'text-red-600' : (($days_left <= 7) ? 'text-orange-500' : 'text-green-600'); ?>">
+                                            <?php if ($days_left > 0): ?>
+                                                <?php echo $days_left; ?> Days Remaining
+                                            <?php elseif ($days_left === 0): ?>
+                                                Expires Today
+                                            <?php else: ?>
+                                                Expired
+                                            <?php endif; ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-sm text-gray-400 italic">Expiry date not set</span>
+                                    <?php endif; ?>
                                 </div>
                             <?php else: ?>
                                 <div class="flex items-center text-orange-600 bg-orange-50 p-3 rounded border border-orange-100">
@@ -158,17 +201,21 @@ $assigned_tech = $techQuery->fetch(PDO::FETCH_ASSOC);
                                     </div>
                                 </div>
 
-                                <div class="flex space-x-3 mt-4 pt-4 border-t border-blue-200">
-                                    <a href="tel:<?php echo htmlspecialchars($assigned_tech['staff_phone']); ?>" class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold shadow transition text-sm">
-                                        <i class="fa fa-phone-alt mr-1"></i> Call
-                                    </a>
-                                    <a href="https://wa.me/88<?php echo htmlspecialchars($assigned_tech['staff_phone']); ?>" target="_blank" class="flex-1 text-center bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-bold shadow transition text-sm">
-                                        <i class="fab fa-whatsapp text-lg mr-1"></i> WhatsApp
-                                    </a>
-                                    <a href="view_ticket.php?id=<?php echo $assigned_tech['ticket_id']; ?>" class="flex-1 text-center bg-gray-800 hover:bg-gray-900 text-white py-2 rounded-lg font-bold shadow transition text-sm">
-                                        <i class="fa fa-comments mr-1"></i> Chat Setup
-                                    </a>
-                                </div>
+                                <!-- FIX #11: staff_phone null/empty হলে Call ও WhatsApp লিঙ্ক রেন্ডার করা যাবে না -->
+                                <?php if (!empty($assigned_tech['staff_phone'])): ?>
+                                    <div class="flex space-x-3 mt-4 pt-4 border-t border-blue-200">
+                                        <a href="tel:<?php echo htmlspecialchars($assigned_tech['staff_phone']); ?>" class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold shadow transition text-sm">
+                                            <i class="fa fa-phone-alt mr-1"></i> Call
+                                        </a>
+                                        <!-- FIX #12: buildWhatsAppNumber() দিয়ে সঠিক format নিশ্চিত করা হচ্ছে -->
+                                        <a href="https://wa.me/<?php echo htmlspecialchars(buildWhatsAppNumber($assigned_tech['staff_phone'])); ?>" target="_blank" class="flex-1 text-center bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-bold shadow transition text-sm">
+                                            <i class="fab fa-whatsapp text-lg mr-1"></i> WhatsApp
+                                        </a>
+                                        <a href="view_ticket.php?id=<?php echo (int)$assigned_tech['ticket_id']; ?>" class="flex-1 text-center bg-gray-800 hover:bg-gray-900 text-white py-2 rounded-lg font-bold shadow transition text-sm">
+                                            <i class="fa fa-comments mr-1"></i> Chat Setup
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         <?php else: ?>
                             <?php if ($sub && $sub['status'] != 'active'): ?>
@@ -178,13 +225,20 @@ $assigned_tech = $techQuery->fetch(PDO::FETCH_ASSOC);
                                 </div>
                             <?php endif; ?>
                         <?php endif; ?>
-                        <div class="mt-6 flex space-x-4">
-                            <a href="upgrade.php" class="bg-gray-800 text-white px-5 py-2 rounded text-sm font-semibold hover:bg-black transition"><i class="fa fa-arrow-up mr-2"></i> Upgrade Plan</a>
-                            <a href="support.php" class="border border-gray-300 text-gray-700 px-5 py-2 rounded text-sm font-semibold hover:bg-gray-100 transition"><i class="fa fa-headset mr-2"></i> Support Ticket</a>
-                        </div>
+
                     <?php else: ?>
                         <p class="text-gray-500">No active subscription found.</p>
                     <?php endif; ?>
+
+                    <!-- FIX #3: বাটন দুটো if ($sub) ব্লকের বাইরে আনা হয়েছে।
+                         Subscription না থাকলেও customer Support Ticket দিতে পারবে।
+                         Upgrade Plan শুধু subscription থাকলে দেখাবে (কারণ upgrade মানে existing plan upgrade)। -->
+                    <div class="mt-6 flex space-x-4">
+                        <?php if ($sub): ?>
+                            <a href="upgrade.php" class="bg-gray-800 text-white px-5 py-2 rounded text-sm font-semibold hover:bg-black transition"><i class="fa fa-arrow-up mr-2"></i> Upgrade Plan</a>
+                        <?php endif; ?>
+                        <a href="support.php" class="border border-gray-300 text-gray-700 px-5 py-2 rounded text-sm font-semibold hover:bg-gray-100 transition"><i class="fa fa-headset mr-2"></i> Support Ticket</a>
+                    </div>
                 </div>
 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8 border-t-4 border-t-orange-500">
@@ -194,7 +248,8 @@ $assigned_tech = $techQuery->fetch(PDO::FETCH_ASSOC);
                             <?php foreach ($unpaid_invoices as $inv): ?>
                                 <div class="p-4 bg-orange-50 border border-orange-200 rounded-lg relative overflow-hidden">
                                     <div class="flex justify-between items-center mb-1">
-                                        <span class="text-[10px] font-bold text-gray-500 uppercase">INV: <?php echo $inv['invoice_number']; ?></span>
+                                        <!-- FIX #1: htmlspecialchars() যোগ করা হয়েছে — XSS প্রতিরোধ -->
+                                        <span class="text-[10px] font-bold text-gray-500 uppercase">INV: <?php echo htmlspecialchars($inv['invoice_number'], ENT_QUOTES, 'UTF-8'); ?></span>
                                         <?php if ($inv['status'] == 'pending'): ?>
                                             <span class="bg-blue-500 text-white px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">VERIFYING</span>
                                         <?php else: ?>
@@ -207,7 +262,7 @@ $assigned_tech = $techQuery->fetch(PDO::FETCH_ASSOC);
                                     <?php if ($inv['status'] == 'pending'): ?>
                                         <button disabled class="w-full mt-4 bg-gray-400 text-white py-2 rounded-lg text-sm font-bold shadow cursor-not-allowed"><i class="fa fa-spinner fa-spin mr-1"></i> Processing</button>
                                     <?php else: ?>
-                                        <a href="pay_invoice.php?invoice_id=<?php echo $inv['invoice_id']; ?>" class="block text-center mt-4 bg-orange-600 text-white py-2 rounded-lg text-sm font-bold shadow hover:bg-orange-700 transition">Pay Now</a>
+                                        <a href="pay_invoice.php?invoice_id=<?php echo (int)$inv['invoice_id']; ?>" class="block text-center mt-4 bg-orange-600 text-white py-2 rounded-lg text-sm font-bold shadow hover:bg-orange-700 transition">Pay Now</a>
                                     <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>
@@ -235,17 +290,28 @@ $assigned_tech = $techQuery->fetch(PDO::FETCH_ASSOC);
                             <tbody class="divide-y divide-gray-100">
                                 <?php foreach ($invoice_history as $hist): ?>
                                     <tr class="hover:bg-gray-50">
-                                        <td class="py-3 px-4 font-bold text-gray-600"><?php echo $hist['invoice_number']; ?></td>
+                                        <!-- FIX #1: htmlspecialchars() যোগ করা হয়েছে — XSS প্রতিরোধ -->
+                                        <td class="py-3 px-4 font-bold text-gray-600"><?php echo htmlspecialchars($hist['invoice_number'], ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td class="py-3 px-4 text-gray-500"><?php echo date("d M Y", strtotime($hist['created_at'])); ?></td>
                                         <td class="py-3 px-4 font-bold text-gray-800">৳<?php echo number_format($hist['amount']); ?></td>
                                         <td class="py-3 px-4">
-                                            <span class="px-2 py-1 rounded text-[10px] font-bold border <?php echo ($hist['status'] == 'paid') ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200'; ?>">
-                                                <?php echo strtoupper($hist['status']); ?>
+                                            <!-- FIX #8: 'pending' status-এর জন্য আলাদা (নীল) color যোগ করা হয়েছে -->
+                                            <?php
+                                                if ($hist['status'] == 'paid') {
+                                                    $statusClass = 'bg-green-50 text-green-600 border-green-200';
+                                                } elseif ($hist['status'] == 'pending') {
+                                                    $statusClass = 'bg-blue-50 text-blue-600 border-blue-200';
+                                                } else {
+                                                    $statusClass = 'bg-red-50 text-red-600 border-red-200';
+                                                }
+                                            ?>
+                                            <span class="px-2 py-1 rounded text-[10px] font-bold border <?php echo $statusClass; ?>">
+                                                <?php echo strtoupper(htmlspecialchars($hist['status'])); ?>
                                             </span>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
-                                <?php if (empty($invoice_history)) echo "<tr><td colspan='4' class='text-center py-6 text-gray-400 italic'>No invoice history available.</td></tr>"; ?>
+                                <?php if (empty($invoice_history)) echo "<tr><td colspan='4' class='text-center py-6 text-gray-400 italic'>No payment history available.</td></tr>"; ?>
                             </tbody>
                         </table>
                     </div>
@@ -260,7 +326,8 @@ $assigned_tech = $techQuery->fetch(PDO::FETCH_ASSOC);
                             <i class="fa fa-user"></i>
                         </div>
                         <h4 class="font-bold text-xl text-gray-800"><?php echo htmlspecialchars($user['full_name']); ?></h4>
-                        <span class="inline-block mt-1 px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-semibold">Customer ID: #<?php echo $user['user_id']; ?></span>
+                        <!-- FIX #10: user_id integer cast করো — অতিরিক্ত সতর্কতা -->
+                        <span class="inline-block mt-1 px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-semibold">Customer ID: #<?php echo (int)$user['user_id']; ?></span>
                     </div>
 
                     <div class="space-y-4">
