@@ -1,32 +1,67 @@
 <?php
 include_once("db.php");
 
+// Get JSON data from React Axios
 $data = json_decode(file_get_contents("php://input"), true);
 
 if ($data) {
 
-    $firstName = $conn->real_escape_string($data['firstName']);
-    $lastName  = $conn->real_escape_string($data['lastName']);
-    $number    = $conn->real_escape_string($data['number']);
-    $email     = $conn->real_escape_string($data['email']);
-    $address   = $conn->real_escape_string($data['textarea']); 
-    $gender    = $conn->real_escape_string($data['gender']);
-    $district  = $conn->real_escape_string($data['district']);
+    // Extract data
+    $firstName = $data['firstName'];
+    $lastName  = $data['lastName'];
+    $number    = $data['number'];
+    $email     = $data['email'];
+    $address   = $data['textarea'];
+    $gender    = $data['gender'];
+    $district  = $data['district'];
 
+    // Prepared INSERT query
+    $query = "INSERT INTO users
+              (first_name, last_name, phone_number, email, address, gender, district)
+              VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-    $query = "INSERT INTO users (first_name, last_name, phone_number, email, address, gender, district) 
-              VALUES ('$firstName', '$lastName', '$number', '$email', '$address', '$gender', '$district')";
-    
+    $stmt = $conn->prepare($query);
 
-    if ($conn->query($query)) {
-
-        if ($conn->affected_rows > 0) {
-            echo json_encode(["success" => true, "message" => "Operation completed successfully!"]);
-        } else {
-            echo json_encode(["success" => false, "message" => "No rows inserted."]);
-        }
-    } else {
-        echo json_encode(["success" => false, "message" => "SQL Error", "error" => $conn->error]);
+    if (!$stmt) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Prepare failed.",
+            "error" => $conn->error
+        ]);
+        exit;
     }
+
+    $stmt->bind_param(
+        "sssssss",
+        $firstName,
+        $lastName,
+        $number,
+        $email,
+        $address,
+        $gender,
+        $district
+    );
+
+    $stmt->execute();
+
+    if ($stmt->affected_rows > 0) {
+        echo json_encode([
+            "success" => true,
+            "message" => "Data inserted successfully!"
+        ]);
+    } else {
+        echo json_encode([
+            "success" => false,
+            "message" => "No row inserted.",
+            "error" => $stmt->error
+        ]);
+    }
+
+    $stmt->close();
+    $conn->close();
+} else {
+    echo json_encode([
+        "success" => false,
+        "message" => "No data received."
+    ]);
 }
-?>
