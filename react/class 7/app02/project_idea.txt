@@ -1,0 +1,22 @@
+14. Password Generator & Strength Checker
+কি করবে: কাস্টম পাসওয়ার্ড জেনারেট (length, symbols, numbers), strength meter
+কেন Unique: Security tool, real-time feedback
+শিখবে: Random generation, regex, visual feedback
+
+
+11. Typing Speed Tester
+কি করবে: প্যারাগ্রাফ টাইপ করতে হবে, WPM (words per minute), accuracy দেখাবে
+কেন Unique: Real-time character matching, timer
+শিখবে: Keyboard events, performance tracking
+
+
+6. Markdown Editor with Live Preview
+কি করবে: বাম পাশে Markdown লিখবে, ডান পাশে লাইভ প্রিভিউ দেখাবে, export as HTML/PDF
+কেন Unique: Real-time parsing, syntax highlighting
+শিখবে: marked library integration, debouncing
+
+
+1. Personal Kanban Board (Trello Clone)
+কি করবে: টাস্ক তৈরি, ড্র্যাগ অ্যান্ড ড্রপ করে এক কলাম থেকে অন্য কলামে নেওয়া (To Do → In Progress → Done)
+কেন Unique: ড্র্যাগ অ্যান্ড ড্রপ, কমপ্লেক্স স্টেট ম্যানেজমেন্ট
+শিখবে: useState, useEffect, ড্র্যাগ ইভেন্ট হ্যান্ডলিং
