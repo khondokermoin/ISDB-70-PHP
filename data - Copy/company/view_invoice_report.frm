@@ -1,0 +1,16 @@
+TYPE=VIEW
+query=select `i`.`id` AS `id`,`i`.`invoice_no` AS `invoice_no`,`i`.`customer_name` AS `customer_name`,`i`.`sale_date` AS `sale_date`,`i`.`total_amount` AS `total_amount`,`i`.`returned_amount` AS `returned_amount`,`i`.`total_amount` - `i`.`returned_amount` AS `net_total` from `company`.`invoice` `i`
+md5=ae77e1905d9bc51ae1d5c239598b1c47
+updatable=1
+algorithm=0
+definer_user=root
+definer_host=localhost
+suid=2
+with_check_option=0
+timestamp=0001776665487540455
+create-version=2
+source=SELECT\n    i.id,\n    i.invoice_no,\n    i.customer_name,\n    i.sale_date,\n    i.total_amount,\n    i.returned_amount,\n    (i.total_amount - i.returned_amount) AS net_total\nFROM invoice i
+client_cs_name=utf8mb4
+connection_cl_name=utf8mb4_unicode_ci
+view_body_utf8=select `i`.`id` AS `id`,`i`.`invoice_no` AS `invoice_no`,`i`.`customer_name` AS `customer_name`,`i`.`sale_date` AS `sale_date`,`i`.`total_amount` AS `total_amount`,`i`.`returned_amount` AS `returned_amount`,`i`.`total_amount` - `i`.`returned_amount` AS `net_total` from `company`.`invoice` `i`
+mariadb-version=100432

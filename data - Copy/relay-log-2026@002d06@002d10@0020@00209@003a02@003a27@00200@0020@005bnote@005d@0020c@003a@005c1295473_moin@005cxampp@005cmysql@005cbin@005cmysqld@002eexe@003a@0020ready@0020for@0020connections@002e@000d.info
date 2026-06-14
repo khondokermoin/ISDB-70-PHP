@@ -1,0 +1,24 @@
+he m5
+.\mysql-relay-bin-2026@002d06@002d10@0020@00209@003a02@003a27@00200@0020@005bnote@005d@0020c@003a@005c1295473_moin@005cxampp@005cmysql@005cbin@005cmysqld@002eexe@003a@0020ready@0020for@0020connections@002e@000d.000001
+4
+
+0
+0
+aster server. Connection attempt terminated. Internal MariaDB error code: 1593
+2026-06-13 11:46:10 7 [Note] Reading Master_info: 'master-version@003a@0020@002710@002e4@002e32@002dmariadb@0027@0020@0020socket@003a@0020@0027@0027@0020@0020port@003a@00203306@0020@0020mariadb@002eorg@0020binary@0020distribution@000d.info'  Relay_info:'relay-log-version@003a@0020@002710@002e4@002e32@002dmariadb@0027@0020@0020socket@003a@0020@0027@0027@0020@0020port@003a@00203306@0020@0020mariadb@002eorg@0020binary@0020distribution@000d.info'
+2026-06-13 11:46:10 12 [Note] Master '2026-06-10  9:02:27 0 [Note] c:\1295473_moin\xampp\mysql\bin\mysqld.exe: ready for connections.': Slave I/O thread killed while connecting to master
+2026-06-13 11:46:10 12 [Note] Master '2026-06-10  9:02:27 0 [Note] c:\1295473_moin\xampp\mysql\bin\mysqld.exe: ready for connections.': Slave I/O thread exiting, read up to log 'FIRST', position 4
+2026-06-13 11:46:10 12 [Note] Master '2026-06-10  9:02:27 0 [Note] c:\1295473_moin\xampp\mysql\bin\mysqld.exe: ready for connections.': master was :3306
+2026-06-13 11:46:10 7 [Note] Initialized Master_info from 'master-version@003a@0020@002710@002e4@002e32@002dmariadb@0027@0020@0020socket@003a@0020@0027@0027@0020@0020port@003a@00203306@0020@0020mariadb@002eorg@0020binary@0020distribution@000d.info'
+2026-06-13 11:46:10 7 [Note] Added new Master_info 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution' to hash table
+2026-06-13 11:46:10 14 [Note] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Slave I/O thread: Start asynchronous replication to master '@:3306' in log '' at position 4
+2026-06-13 11:46:10 7 [Note] Started replication for 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution'
+2026-06-13 11:46:10 15 [Note] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Slave SQL thread initialized, starting replication in log 'FIRST' at position 0, relay log '.\mysql-relay-bin-version@003a@0020@002710@002e4@002e32@002dmariadb@0027@0020@0020socket@003a@0020@0027@0027@0020@0020port@003a@00203306@0020@0020mariadb@002eorg@0020binary@0020distribution@000d.000001' position: 4
+2026-06-13 11:46:10 14 [ERROR] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Slave I/O: Fatal error: Invalid (empty) username when attempting to connect to the master server. Connection attempt terminated. Internal MariaDB error code: 1593
+2026-06-13 11:46:10 0 [Note] Reading of all Master_info entries succeeded
+2026-06-13 11:46:10 14 [Note] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Slave I/O thread killed while connecting to master
+2026-06-13 11:46:10 0 [Note] Added new Master_info '' to hash table
+2026-06-13 11:46:10 14 [Note] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Slave I/O thread exiting, read up to log 'FIRST', position 4
+2026-06-13 11:46:10 0 [Note] c:\1295473_moin\xampp\mysql\bin\mysqld.exe: ready for connections.
+Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution
+2026-06-13 11:46:10 14 [Note] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': master was :3306

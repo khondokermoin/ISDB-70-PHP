@@ -1,0 +1,16 @@
+TYPE=VIEW
+query=select `pos_db`.`product`.`id` AS `id`,`pos_db`.`product`.`name` AS `name`,`pos_db`.`product`.`price` AS `price`,`pos_db`.`product`.`manufacturer_id` AS `manufacturer_id` from `pos_db`.`product` where `pos_db`.`product`.`price` > 5000
+md5=5618849a17be4430ff8dae4bb258d93b
+updatable=1
+algorithm=0
+definer_user=root
+definer_host=localhost
+suid=2
+with_check_option=0
+timestamp=0001776661136862915
+create-version=2
+source=SELECT * FROM Product WHERE price > 5000
+client_cs_name=utf8mb4
+connection_cl_name=utf8mb4_unicode_ci
+view_body_utf8=select `pos_db`.`product`.`id` AS `id`,`pos_db`.`product`.`name` AS `name`,`pos_db`.`product`.`price` AS `price`,`pos_db`.`product`.`manufacturer_id` AS `manufacturer_id` from `pos_db`.`product` where `pos_db`.`product`.`price` > 5000
+mariadb-version=100432
