@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('phone', 20)->nullable();
             $table->string('email', 50)->unique();
             $table->tinyInteger('district');
-            $table->string('subjects', 100);
+            $table->string('subjects', 100)->nullable();
             $table->timestamps();
         });
     }

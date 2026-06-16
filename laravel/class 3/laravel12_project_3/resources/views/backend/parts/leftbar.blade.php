@@ -10,15 +10,16 @@
     </div>
 
     <nav class="sidebar-nav">
-        <a class="nav-link " href="{{ url('dashboard') }}" aria-current="page">
+        <a class="nav-link @if (Route::is('dashboard')) active @endif" href="{{ url('dashboard') }}"
+            aria-current="page">
             <span class="nav-icon"><i class="bi bi-speedometer2" aria-hidden="true"></i></span>
             <span class="nav-text">Dashboard</span>
         </a>
-        <a class="nav-link " href="{{ url('students') }}">
+        <a class="nav-link @if (Route::is('students')) active @endif " href="{{ url('students') }}">
             <span class="nav-icon"><i class="bi bi-people" aria-hidden="true"></i></span>
             <span class="nav-text">Students</span>
         </a>
-        ''
+
     </nav>
 
     <div class="sidebar-user">
