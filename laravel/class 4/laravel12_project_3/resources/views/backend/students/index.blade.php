@@ -1,0 +1,73 @@
+@extends('backend.master')
+
+{{-- style css urls --}}
+@push('styles')
+@endpush()
+
+{{-- scripts url --}}
+@push('scripts')
+@endpush()
+
+{{-- scontent --}}
+@section('content')
+    <main class="dashboard-content">
+        <div class="container-fluid px-3 px-lg-4 py-4">
+            <div class="page-heading">
+                <div class="page-heading-copy">
+                    <span class="page-icon"><i class="bi bi-table" aria-hidden="true"></i></span>
+                    <div>
+                        <p class="eyebrow mb-1">Data</p>
+                        <h1 class="h3 mb-1">Tables</h1>
+                        <p class="text-muted mb-0">Use responsive, searchable tables for operational records.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <section class="panel">
+                <!-- Pushed to the right with an icon -->
+                <div class="d-flex justify-content-end mb-3">
+                    <a class="btn btn-outline-secondary" href="{{ url('/students/create') }}">
+                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i> New Student
+                    </a>
+                </div>
+                <div class="panel-header">
+                    <div>
+                        <h2 class="h5 mb-1 section-title"><i class="bi bi-table" aria-hidden="true"></i><span>Advanced
+                                Table</span></h2>
+                        <p class="text-muted mb-0">Searchable responsive table for orders and customer data.</p>
+                    </div><input class="form-control form-control-sm table-search" type="search"
+                        placeholder="Search orders" data-table-search="ordersTable" aria-label="Search orders">
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0" id="ordersTable" data-searchable-table>
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Name</th>
+                                <th>Gender</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Subject</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($students as $student)
+                                <tr>
+                                    <td class="fw-semibold">{{ $student->id }}</td>
+                                    <td>{{ $student->name }}</td>
+                                    <td>{{ $student->gender }}</td>
+                                    <td>{{ $student->phone }}</td>
+                                    <td>{{ $student->email }}</td>
+                                    <td>{{ $student->subjects }}</td>
+
+                                </tr>
+                            @endforeach
+
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+@endsection()
