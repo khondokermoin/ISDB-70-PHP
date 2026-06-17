@@ -43,23 +43,31 @@
                     <table class="table align-middle mb-0" id="ordersTable" data-searchable-table>
                         <thead>
                             <tr>
-                                <th>Id</th>
-                                <th>Name</th>
-                                <th>Gender</th>
-                                <th>Phone</th>
-                                <th>Email</th>
-                                <th>Subject</th>
+                                <th class="text-center">Id</th>
+                                <th class="text-center">Name</th>
+                                <th class="text-center">Gender</th>
+                                <th class="text-center">Phone</th>
+                                <th class="text-center">Email</th>
+                                <th class="text-center">Subject</th>
+                                <th class="text-center">District</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($students as $student)
                                 <tr>
-                                    <td class="fw-semibold">{{ $student->id }}</td>
-                                    <td>{{ $student->name }}</td>
-                                    <td>{{ $student->gender }}</td>
-                                    <td>{{ $student->phone }}</td>
-                                    <td>{{ $student->email }}</td>
-                                    <td>{{ $student->subjects }}</td>
+                                    <td class="text-center">{{ $student->id }}</td>
+                                    <td class="text-center">{{ $student->name }}</td>
+                                    <td class="text-center">{{ $student->gender }}</td>
+                                    <td class="text-center">{{ $student->phone }}</td>
+                                    <td class="text-center">{{ $student->email }}</td>
+                                    <td class="text-center">{{ $student->subjects }}</td>
+                                    <td class="text-center">{{ $student->district }}</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-light btn-sm" type="button">
+                                            View
+                                        </button>
+                                    </td>
 
                                 </tr>
                             @endforeach

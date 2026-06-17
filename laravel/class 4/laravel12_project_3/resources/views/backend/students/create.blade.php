@@ -27,7 +27,17 @@
 
             <section class="row g-3">
                 <div class="col-12 col-xl-8">
-                    <form class="panel needs-validation" method="POST" novalidate action="{{route('students.store')}}">
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <strong>Whoops!</strong> There were some problems with your input.<br><br>
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    <form class="panel needs-validation" method="POST" novalidate action="{{ route('students.store') }}">
                         @csrf
                         <div class="panel-header">
                             <div>
@@ -39,8 +49,8 @@
                         <div class="row g-3">
                             <!-- First Name -->
                             <div class="col-md-6">
-                                <label class="form-label" for="firstName">Name</label>
-                                <input class="form-control" id="firstName" name="firstName" type="text" required>
+                                <label class="form-label" for="fullName">Name</label>
+                                <input class="form-control" id="fullName" name="fullName" type="text" required>
                                 <div class="invalid-feedback">First name is required.</div>
                             </div>
 
@@ -84,10 +94,10 @@
                                 <label class="form-label" for="district">District</label>
                                 <select class="form-select" id="district" name="district" required>
                                     <option value="">Choose district</option>
-                                    <option>Dhaka</option>
-                                    <option>Barishal</option>
-                                    <option>Khulna</option>
-                                    <option>Chittagong</option>
+                                    <option value="1">Dhaka</option>
+                                    <option value="2">Barishal</option>
+                                    <option value="3">Khulna</option>
+                                    <option value="4">Chittagong</option>
                                 </select>
                                 <div class="invalid-feedback">Choose a district.</div>
                             </div>

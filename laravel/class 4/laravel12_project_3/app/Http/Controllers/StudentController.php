@@ -30,7 +30,23 @@ class StudentController extends Controller
      */
     public function store(Request $request)
     {
-        dd($request);
+        $request->validate([
+            'fullName'=>'required|min:4|max:25',
+            'gender'=>'required',
+            'email'=> 'email|required|unique:students,email'
+        ]);
+
+        // dd($request);
+        $student = new Student;
+        $student->name = $request->fullName;
+        $student->email = $request->email;
+        $student->phone = $request->phone;
+        $student->gender = $request->gender;
+        $student->district = $request->district;
+        $student->subjects = $request->subject;
+
+        $student->save();
+        return redirect('/students');
     }
 
     /**
