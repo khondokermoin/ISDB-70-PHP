@@ -74,7 +74,9 @@ include '../views/layouts/header.php';
 
             <div class="flex justify-between items-start border-b-2 border-gray-100 pb-8 mb-8">
                 <div>
-                    <h2 class="text-3xl font-black text-orange-600 tracking-wider uppercase">AMAR IT</h2>
+                    <a href="index.php" class="text-3xl font-extrabold text-red-500 tracking-tight">
+                        AMAR <span class="text-gray-800">IT</span>
+                    </a>
                     <p class="text-gray-500 text-sm mt-1">Reliable Internet Service Provider</p>
                     <p class="text-gray-400 text-xs mt-1">Jigatola, Dhaka, Bangladesh</p>
                 </div>
