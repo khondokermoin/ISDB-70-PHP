@@ -60,17 +60,16 @@ $stmt = $db->prepare($query);
 $stmt->execute([':uid' => $user_id]);
 $sub = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// শুধুমাত্র বকেয়া (Unpaid) ইনভয়েস আনা
-$unpaidInvQuery = "SELECT invoice_id, invoice_number, amount, due_date, status
-                   FROM invoices
-                   WHERE user_id = :uid AND status IN ('unpaid', 'pending')
-                   ORDER BY created_at DESC";
+// শুধুমাত্র বকেয়া (Unpaid) ইনভয়েস আনা এবং প্যাকেজের নাম (package_name) যুক্ত করা
+$unpaidInvQuery = "SELECT i.invoice_id, i.invoice_number, i.amount, i.due_date, i.status, p.name as package_name
+                   FROM invoices i
+                   LEFT JOIN subscriptions s ON i.subscription_id = s.subscription_id
+                   LEFT JOIN packages p ON s.package_id = p.package_id
+                   WHERE i.user_id = :uid AND i.status IN ('unpaid', 'pending')
+                   ORDER BY i.created_at DESC";
 $stmtUnpaid = $db->prepare($unpaidInvQuery);
 $stmtUnpaid->execute([':uid' => $user_id]);
 $unpaid_invoices = $stmtUnpaid->fetchAll(PDO::FETCH_ASSOC);
-
-// Payment History — শুধুমাত্র PAID invoices এবং প্যাকেজের নাম দেখাবে
-// Unpaid/pending ইতিমধ্যে "Pending Payments" section-এ দেখানো হচ্ছে
 
 // FIX (medium): $db->query() সরাসরি chain করলে query fail হলে fatal error হয়
 // এখন false check করে safe fallback দেওয়া হচ্ছে
@@ -89,6 +88,21 @@ foreach ($packages_data as $p) {
     } elseif ($pkgByPrice[$price] !== $p['name']) {
         // একই দামে দুটো আলাদা package → ambiguous, 'Custom' দেখাও
         $pkgByPrice[$price] = 'Custom';
+    }
+}
+
+// 🔥 FIX: Upgrade ইনভয়েস (UPG-xxx) হলে প্যাকেজের আসল নাম (যেটাতে আপগ্রেড হবে) বসানো
+foreach ($unpaid_invoices as $key => $inv) {
+    if (strpos($inv['invoice_number'], 'UPG-') === 0) {
+        $parts = explode('-', $inv['invoice_number']);
+        // $parts[1] এ নতুন প্যাকেজের ID আছে
+        if (isset($parts[1]) && is_numeric($parts[1])) {
+            $target_pkg_id = (int)$parts[1];
+            // প্যাকেজটি ডাটাবেসে থাকলে সেটির নাম দিয়ে আপডেট করা
+            if (isset($pkgById[$target_pkg_id])) {
+                $unpaid_invoices[$key]['package_name'] = $pkgById[$target_pkg_id];
+            }
+        }
     }
 }
 
@@ -282,48 +296,84 @@ function buildWhatsAppNumber(string $phone): string
                 </div>
 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8 border-t-4 border-t-orange-500">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa fa-exclamation-circle text-orange-500 mr-2"></i> Pending Payments</h3>
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h3 class="text-lg font-bold text-gray-800"><i class="fa fa-exclamation-circle text-orange-500 mr-2"></i> Pending Payments</h3>
+                    </div>
+
                     <?php if (count($unpaid_invoices) > 0): ?>
-                        <div class="space-y-4 max-h-[250px] overflow-y-auto pr-2">
+                        <div class="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                             <?php foreach ($unpaid_invoices as $inv): ?>
-                                <div class="p-4 bg-orange-50 border border-orange-200 rounded-lg relative overflow-hidden">
-                                    <div class="flex justify-between items-center mb-1">
-                                        <!-- htmlspecialchars() যোগ করা হয়েছে — XSS প্রতিরোধ -->
-                                        <span class="text-[10px] font-bold text-gray-500 uppercase">INV: <?php echo htmlspecialchars($inv['invoice_number'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                <div class="p-5 bg-gradient-to-br from-orange-50 to-white border border-orange-200 rounded-xl relative overflow-hidden hover:shadow-md transition-shadow duration-300">
+
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">INV: <?php echo htmlspecialchars($inv['invoice_number'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <h4 class="text-sm font-extrabold text-gray-800 mt-0.5">
+                                                <?php echo htmlspecialchars($inv['package_name'] ?? 'Internet Subscription', ENT_QUOTES, 'UTF-8'); ?>
+                                            </h4>
+                                        </div>
+
                                         <?php if ($inv['status'] == 'pending'): ?>
-                                            <span class="bg-blue-500 text-white px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">VERIFYING</span>
+                                            <span class="bg-blue-500 text-white px-2.5 py-1 rounded-md text-[10px] font-bold animate-pulse shadow-sm">VERIFYING</span>
                                         <?php else: ?>
-                                            <span class="bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">UNPAID</span>
+                                            <span class="bg-red-500 text-white px-2.5 py-1 rounded-md text-[10px] font-bold animate-pulse shadow-sm">UNPAID</span>
                                         <?php endif; ?>
                                     </div>
-                                    <p class="text-2xl font-black text-gray-800">৳<?php echo number_format($inv['amount']); ?></p>
 
-                                    <!-- FIX (medium): due_date NULL হলে strtotime(null) → false → "01 Jan 1970" দেখাত -->
-                                    <p class="text-xs text-gray-500 mt-1 italic">
-                                        Due: <?php echo !empty($inv['due_date']) ? date("d M Y", strtotime($inv['due_date'])) : 'N/A'; ?>
-                                    </p>
+                                    <div class="flex justify-between items-end mt-3 mb-1">
+                                        <div>
+                                            <p class="text-2xl font-black text-gray-900">৳<?php echo number_format($inv['amount']); ?></p>
+                                            <p class="text-[11px] text-gray-500 font-medium mt-0.5">
+                                                Due: <?php echo !empty($inv['due_date']) ? date("d M Y", strtotime($inv['due_date'])) : 'N/A'; ?>
+                                            </p>
+                                        </div>
+
+                                        <?php if (strpos($inv['invoice_number'], 'UPG-') === 0): ?>
+                                            <span class="text-[10px] bg-purple-100 text-purple-700 font-bold px-2 py-1 rounded-full border border-purple-200">
+                                                <i class="fa fa-arrow-up mr-1"></i>Upgrade
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-2 py-1 rounded-full border border-emerald-200">
+                                                <i class="fa fa-sync-alt mr-1"></i>Renewal
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
 
                                     <?php if ($inv['status'] == 'pending'): ?>
-                                        <button disabled class="w-full mt-4 bg-gray-400 text-white py-2 rounded-lg text-sm font-bold shadow cursor-not-allowed"><i class="fa fa-spinner fa-spin mr-1"></i> Processing</button>
+                                        <button disabled class="w-full mt-4 bg-gray-300 text-gray-600 py-2.5 rounded-lg text-sm font-bold cursor-not-allowed flex justify-center items-center">
+                                            <i class="fa fa-spinner fa-spin mr-2"></i> Payment Processing
+                                        </button>
                                     <?php else: ?>
-                                        <!-- FIX (minor): GET link CSRF-vulnerable ছিল।
-                                             এখন POST form + CSRF token ব্যবহার করা হচ্ছে।
-                                             pay_invoice.php-এ $_POST['csrf_token'] === $_SESSION['csrf_token'] verify করতে হবে। -->
-                                        <form action="pay_invoice.php" method="POST" class="mt-4">
-                                            <input type="hidden" name="invoice_id" value="<?php echo (int)$inv['invoice_id']; ?>">
-                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8'); ?>">
-                                            <button type="submit" class="w-full bg-orange-600 text-white py-2 rounded-lg text-sm font-bold shadow hover:bg-orange-700 transition">
+                                        <div class="mt-4 flex gap-2">
+                                            <a href="pay_invoice.php?invoice_id=<?php echo (int)$inv['invoice_id']; ?>" class="flex-1 text-center bg-orange-600 text-white py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-orange-700 hover:shadow-lg transition-all">
                                                 <i class="fa fa-credit-card mr-1"></i> Pay Now
-                                            </button>
-                                        </form>
+                                            </a>
+
+                                            <a href="view_invoice.php?invoice_id=<?php echo (int)$inv['invoice_id']; ?>" class="bg-white border border-gray-300 text-gray-600 py-2.5 px-4 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-50 hover:text-orange-600 transition-all" title="View Invoice">
+                                                <i class="fa fa-file-invoice"></i>
+                                            </a>
+
+                                            <?php if (strpos($inv['invoice_number'], 'UPG-') === 0): ?>
+                                                <form action="cancel_invoice.php" method="POST" onsubmit="return confirm('Are you sure you want to cancel this package upgrade request?');">
+                                                    <input type="hidden" name="invoice_id" value="<?php echo (int)$inv['invoice_id']; ?>">
+                                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8'); ?>">
+                                                    <button type="submit" class="bg-red-50 border border-red-200 text-red-600 py-2.5 px-4 rounded-lg text-sm font-bold shadow-sm hover:bg-red-100 hover:text-red-700 transition-all" title="Cancel Upgrade">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </div>
                                     <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>
                         </div>
                     <?php else: ?>
-                        <div class="text-center py-6 text-gray-400 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                            <i class="fa fa-check-circle text-4xl mb-2 text-green-300"></i>
-                            <p class="text-sm font-bold text-gray-500">All bills are cleared!</p>
+                        <div class="text-center py-8 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                            <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fa fa-check text-2xl text-green-500"></i>
+                            </div>
+                            <p class="text-base font-bold text-gray-600">All bills are cleared!</p>
+                            <p class="text-xs text-gray-400 mt-1">You have no pending payments at the moment.</p>
                         </div>
                     <?php endif; ?>
                 </div>
