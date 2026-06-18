@@ -76,7 +76,7 @@
                                     <td class="text-center">{{ $student->district }}</td>
                                     <td class="text-center">
                                         <!-- View Button: নির্দিষ্ট স্টুডেন্টের বিস্তারিত দেখার জন্য -->
-                                        <a href=""
+                                        <a href="{{ route('students.show', $student->id) }}"
                                             class="btn btn-outline-info btn-sm">
                                             View
                                         </a>

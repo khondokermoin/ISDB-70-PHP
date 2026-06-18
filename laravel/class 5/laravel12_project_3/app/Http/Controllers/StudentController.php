@@ -60,7 +60,8 @@ class StudentController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $student = Student::find($id);
+        return view('backend.students.show',['student'=>$student]);
     }
 
     /**

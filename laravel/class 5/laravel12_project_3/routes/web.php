@@ -28,6 +28,7 @@ Route::post('/students', [StudentController::class, 'store'])->name('students.st
 Route::get('/students/create', [StudentController::class, 'create'])->name('students.create'); 
 Route::get('/students/{id}/edit', [StudentController::class, 'edit'])->name('students.edit'); 
 Route::post('/students/{id}/update', [StudentController::class, 'update'])->name('students.update'); 
+Route::get('/students/{id}/show', [StudentController::class, 'show'])->name('students.show'); 
 Route::post('/students/{id}', [StudentController::class, 'destroy'])->name('students.destroy'); 
 
 
