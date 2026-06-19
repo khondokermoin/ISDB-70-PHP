@@ -288,10 +288,26 @@ function buildWhatsAppNumber(string $phone): string
                                 <?php endif; ?>
                             </div>
                         <?php else: ?>
-                            <?php if ($sub && $sub['status'] != 'active'): ?>
+                            <?php if ($sub && $sub['status'] == 'pending'): ?>
                                 <div class="mt-6 bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-400">
                                     <i class="fa fa-user-clock mb-2 text-2xl"></i>
                                     <p class="text-sm">Waiting for a technician to be assigned for your installation.</p>
+                                </div>
+                            <?php elseif ($sub && in_array($sub['status'], ['expired', 'suspended'])): ?>
+                                <div class="mt-6 bg-red-50 border border-red-200 rounded-xl p-6 text-center text-red-600 shadow-sm">
+                                    <i class="fa fa-credit-card mb-3 text-4xl"></i>
+                                    <h4 class="font-bold text-lg mb-1">Payment Required!</h4>
+                                    <p class="text-sm mb-5 text-red-500">Your connection is currently offline. Please pay your pending invoice to reactivate instantly.</p>
+                                    
+                                    <?php if (count($unpaid_invoices) > 0): ?>
+                                        <a href="pay_invoice.php?invoice_id=<?php echo (int)$unpaid_invoices[0]['invoice_id']; ?>" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition transform hover:scale-105">
+                                            Pay Now - ৳<?php echo number_format($unpaid_invoices[0]['amount']); ?>
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="renew.php" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition transform hover:scale-105">
+                                            Renew Package
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
                             <?php endif; ?>
                         <?php endif; ?>

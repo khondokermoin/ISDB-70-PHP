@@ -238,6 +238,17 @@ CREATE TABLE `subscriptions` (
   `status` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `subscriptions`
+--
+
+INSERT INTO `subscriptions` (`subscription_id`, `user_id`, `package_id`, `start_date`, `end_date`, `status`) VALUES
+(1, 7, 1, '2026-05-15', '2026-06-15', 'expired'),
+(2, 8, 2, '2026-05-21', '2026-06-21', 'active'),
+(3, 9, 3, '2026-05-20', '2026-06-20', 'active'),
+(4, 10, 4, '2026-06-20', '2026-07-20', 'active'),
+(5, 11, 5, NULL, NULL, 'pending');
+
 -- --------------------------------------------------------
 
 --
@@ -299,7 +310,12 @@ INSERT INTO `users` (`user_id`, `role_id`, `full_name`, `designation`, `email`, 
 (3, NULL, 'Karim', 'Network Engineer', 'karim@gmail.com', '$2y$10$X.GeC7OGGp4IHAFCC5WLzOLTae/pXl2uci9ktZ6ai0nSvwMF8E9Zy', 'staff', '01647666666', 'Dhaka', 'active', '2026-05-09 13:02:23'),
 (4, NULL, 'Salam', 'Billing Manager', 'salam@gmail.com', '$2y$10$WWzWFBhclxDW9.a4BL4Xj.1ClFOw.hvx5NMd/4O6KblADD5Uv9uhq', 'staff', '01647777777', 'Dhaka', 'active', '2026-05-09 13:02:57'),
 (5, NULL, 'Rakib', 'Customer Support', 'rakib@gmail.com', '$2y$10$XaTnTtCHquc7MFxLTmozDOh5liWmqvpHUNcjK4AqT4fnOoh.8tOUS', 'staff', '01648888888', 'Dhaka', 'active', '2026-05-09 13:03:37'),
-(6, NULL, 'KHONDOKER MOIN HOSSAIN', NULL, 'comt-2005131@dti.ac', '$2y$10$2hQrAQIbCbdnweh4Wjj9N.vU2i7yM.LIVS566zC6RRBs9AHvWGDWS', 'customer', '01647615608', 'Dhaka', 'active', '2026-05-12 06:04:38');
+(6, NULL, 'KHONDOKER MOIN HOSSAIN', NULL, 'comt-2005131@dti.ac', '$2y$10$2hQrAQIbCbdnweh4Wjj9N.vU2i7yM.LIVS566zC6RRBs9AHvWGDWS', 'customer', '01647615608', 'Dhaka', 'active', '2026-05-12 06:04:38'),
+(7, NULL, 'Test Suspended', NULL, 'suspended@test.com', '$2y$10$JaCY6PCN1vPHlwsLfeErMesRFggmyoC1Rxh7z8w4.Cq8D9eLZ0erm', 'customer', '01700000101', 'Dhaka', 'suspended', '2026-05-15 10:00:00'),
+(8, NULL, 'Test 1 Day Left', NULL, '1day@test.com', '$2y$10$JaCY6PCN1vPHlwsLfeErMesRFggmyoC1Rxh7z8w4.Cq8D9eLZ0erm', 'customer', '01700000102', 'Dhaka', 'active', '2026-05-21 10:00:00'),
+(9, NULL, 'Test Expires Today', NULL, 'today@test.com', '$2y$10$JaCY6PCN1vPHlwsLfeErMesRFggmyoC1Rxh7z8w4.Cq8D9eLZ0erm', 'customer', '01700000103', 'Dhaka', 'active', '2026-05-20 10:00:00'),
+(10, NULL, 'Test Active Month', NULL, 'active@test.com', '$2y$10$JaCY6PCN1vPHlwsLfeErMesRFggmyoC1Rxh7z8w4.Cq8D9eLZ0erm', 'customer', '01700000104', 'Dhaka', 'active', '2026-06-20 10:00:00'),
+(11, NULL, 'Test Pending Line', NULL, 'pending@test.com', '$2y$10$JaCY6PCN1vPHlwsLfeErMesRFggmyoC1Rxh7z8w4.Cq8D9eLZ0erm', 'customer', '01700000105', 'Dhaka', 'active', '2026-06-20 10:00:00');
 
 --
 -- Indexes for dumped tables

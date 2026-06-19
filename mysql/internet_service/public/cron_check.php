@@ -93,10 +93,11 @@ try {
         $uid = $row['user_id'];
         $unpaidCount = (int)$row['unpaid_count'];
 
-        // ইউজারের বর্তমান স্ট্যাটাস চেক করা (যাতে আগে থেকে সাসপেন্ড থাকলে লুপে না পড়ে)
-        $userStatusQuery = $db->prepare("SELECT status FROM users WHERE user_id = ?");
+        // ইউজারের বর্তমান স্ট্যাটাস ও ইমেইল চেক করা (যাতে আগে থেকে সাসপেন্ড থাকলে লুপে না পড়ে, এবং মেইল পাঠানো যায়)
+        $userStatusQuery = $db->prepare("SELECT status, full_name, email FROM users WHERE user_id = ?");
         $userStatusQuery->execute([$uid]);
-        $currentStatus = $userStatusQuery->fetchColumn();
+        $userRow = $userStatusQuery->fetch(PDO::FETCH_ASSOC);
+        $currentStatus = $userRow['status'];
 
         if ($unpaidCount == 1 || $unpaidCount == 2) {
 
@@ -110,6 +111,18 @@ try {
             $checkWarning->execute([$uid, $type]);
 
             if ($checkWarning->rowCount() == 0) {
+
+                if (!empty($userRow['email'])) {
+                    $subject = ($unpaidCount == 1) ? "Unpaid Invoice Reminder" : "Final Notice: Unpaid Invoices";
+                    $headers = "From: billing@yourisp.com\r\n";
+                    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+                    $body = "
+                    <h3>Billing Notice</h3>
+                    <p>{$msg}</p>
+                    <p>Please log in to your dashboard and clear your due balance to avoid service interruption.</p>
+                    ";
+                    @mail($userRow['email'], $subject, $body, $headers);
+                }
                 $db->prepare("INSERT INTO notifications (user_id, type, message) VALUES (?, ?, ?)")->execute([$uid, $type, $msg]);
             }
         } elseif ($unpaidCount >= 3) {
@@ -121,6 +134,18 @@ try {
 
                 $msg = "Your connection has been suspended due to 3 unpaid invoices.";
                 $db->prepare("INSERT INTO notifications (user_id, type, message) VALUES (?, 'suspension', ?)")->execute([$uid, $msg]);
+
+                if (!empty($userRow['email'])) {
+                    $subject = "Connection Suspended";
+                    $headers = "From: billing@yourisp.com\r\n";
+                    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+                    $body = "
+                    <h3>Service Suspended</h3>
+                    <p>{$msg}</p>
+                    <p>Please clear your outstanding invoices to restore service.</p>
+                    ";
+                    @mail($userRow['email'], $subject, $body, $headers);
+                }
             }
         }
     }
