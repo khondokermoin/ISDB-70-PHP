@@ -1,161 +1,126 @@
 <?php
-
-require_once '../config/database.php';
-$db = (new Database())->getConnection();
-
-echo "Running ISP Cron Job...<br>\n";
+// cron_check.php
+require_once __DIR__ . '/config/database.php';
 
 try {
+    $db = (new Database())->getConnection();
+    echo "Starting Daily Cron Check...\n";
 
-    $db->beginTransaction();
+    // =================================================================
+    // কাজ ১: যাদের মেয়াদ শেষ (End date পার হয়ে গেছে), তাদের অ্যাকাউন্ট Suspended করা
+    // =================================================================
 
-    /* ==========================================
-       1. Expiry Warning (3 Days Remaining)
-    ========================================== */
-
-    // ফিক্স ১: PHP এর বদলে সরাসরি MySQL এর DATEDIFF() কুয়েরিতে নিয়ে আসা হলো
-    $warningQuery = $db->query("
-        SELECT
-            u.user_id,
-            u.full_name,
-            u.email,
-            s.end_date,
-            DATEDIFF(s.end_date, CURDATE()) as days_left
-        FROM users u
-        INNER JOIN subscriptions s ON u.user_id = s.user_id
-        WHERE
-            u.status = 'active'
-            AND s.status = 'active'
-            AND DATEDIFF(s.end_date, CURDATE()) BETWEEN 0 AND 3
+    // UPDATE চালানোর আগে কাদের সাসপেন্ড হবে সেই তথ্য নিয়ে রাখা হলো
+    // (UPDATE হয়ে গেলে status আর 'active' থাকবে না, তখন আর এই তথ্য পাওয়া যাবে না)
+    $toSuspendStmt = $db->query("
+        SELECT u.user_id, u.full_name, u.email
+        FROM subscriptions s
+        JOIN users u ON s.user_id = u.user_id
+        WHERE s.status = 'active' AND DATEDIFF(s.end_date, CURDATE()) < 0
     ");
+    $toSuspend = $toSuspendStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $usersToNotify = $warningQuery->fetchAll(PDO::FETCH_ASSOC);
+    $suspendQuery = "UPDATE subscriptions s
+                     JOIN users u ON s.user_id = u.user_id
+                     SET s.status = 'expired', u.status = 'suspended'
+                     WHERE s.status = 'active' AND DATEDIFF(s.end_date, CURDATE()) < 0";
 
-    foreach ($usersToNotify as $user) {
+    $stmtSuspend = $db->prepare($suspendQuery);
+    $stmtSuspend->execute();
+    $suspendedCount = $stmtSuspend->rowCount();
+    echo "[$suspendedCount] Accounts suspended.\n";
 
-        // সরাসরি ডাটাবেস থেকে দিন নেওয়া হলো
-        $daysLeft = (int)$user['days_left'];
+    // সাসপেন্ড হওয়া প্রতিটা ইউজারকে নোটিফিকেশন লগ করা এবং মেইল পাঠানো
+    $logSuspension = $db->prepare("INSERT INTO notifications (user_id, type, message) VALUES (?, 'suspension', ?)");
 
-        $message = "Your internet package will expire in {$daysLeft} day(s) on "
-            . date('d M Y', strtotime($user['end_date']))
-            . ". Please pay your bill to avoid interruption.";
+    foreach ($toSuspend as $u) {
+        $suspendMsg = "Your connection has been suspended because your subscription expired. Please renew to restore service.";
+        $logSuspension->execute([$u['user_id'], $suspendMsg]);
 
-        $check = $db->prepare("
-            SELECT notification_id
-            FROM notifications
-            WHERE user_id = ?
-            AND type = 'expiry_warning'
-            AND DATE(sent_at) = CURDATE()
-        ");
+        if (!empty($u['email'])) {
+            $subject = mb_encode_mimeheader("⚠️ Your Internet Connection Has Been Suspended", 'UTF-8');
 
-        $check->execute([$user['user_id']]);
+            $message = "Dear " . $u['full_name'] . ",\n\n";
+            $message .= "Your internet package has expired and your connection has been suspended.\n";
+            $message .= "Please log in to your dashboard and renew your package to restore service.\n\n";
+            $message .= "Login here: https://yourwebsite.com/login.php\n\n";
+            $message .= "Thank you,\nAMAR IT Billing Team";
 
-        if ($check->rowCount() == 0) {
+            $headers = "From: billing@amarit.com\r\n";
+            $headers .= "Reply-To: support@amarit.com\r\n";
+            $headers .= "MIME-Version: 1.0\r\n";
+            $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
 
-            $insert = $db->prepare("
-                INSERT INTO notifications
-                (user_id, type, message)
-                VALUES (?, 'expiry_warning', ?)
-            ");
-
-            $insert->execute([$user['user_id'], $message]);
-
-            if (!empty($user['email'])) {
-                $subject = "Package Expiry Notice";
-                $headers = "From: billing@yourisp.com\r\n";
-                $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-                $body = "
-                <h3>Internet Package Expiry Warning</h3>
-                <p>{$message}</p>
-                <p>Please make payment before expiry.</p>
-                ";
-                @mail($user['email'], $subject, $body, $headers);
-            }
+            @mail($u['email'], $subject, $message, $headers);
         }
     }
 
+    // =================================================================
+    // কাজ ২: যাদের মেয়াদ ৩, ২, ১ দিন আছে বা আজকেই শেষ (০), তাদের মেইল পাঠানো
+    // =================================================================
+    $query = "SELECT s.subscription_id, u.user_id, s.end_date, u.full_name, u.email, p.name as package_name, p.price,
+              DATEDIFF(s.end_date, CURDATE()) as days_left
+              FROM subscriptions s
+              JOIN users u ON s.user_id = u.user_id
+              JOIN packages p ON s.package_id = p.package_id
+              WHERE s.status = 'active' AND DATEDIFF(s.end_date, CURDATE()) IN (3, 2, 1, 0)";
 
-    /* ==========================================
-       2. Invoice Warning & Auto Suspend
-    ========================================== */
+    $stmt = $db->query($query);
+    $expiring_subs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $invoiceUsers = $db->query("
-        SELECT
-            user_id,
-            COUNT(*) AS unpaid_count
-        FROM invoices
-        WHERE status = 'unpaid'
-        GROUP BY user_id
-    ");
+    // একই দিনে একই ইউজারকে একই ধরনের মেইল দুইবার যাওয়া আটকানোর জন্য চেক
+    $checkSent = $db->prepare("SELECT notification_id FROM notifications WHERE user_id = ? AND type = ? AND DATE(sent_at) = CURDATE()");
+    $logSent = $db->prepare("INSERT INTO notifications (user_id, type, message) VALUES (?, ?, ?)");
 
-    foreach ($invoiceUsers as $row) {
+    $emailCount = 0;
+    foreach ($expiring_subs as $sub) {
+        $to = $sub['email'];
+        $days = (int)$sub['days_left'];
+        $type = "expiry_warning_{$days}d";
 
-        $uid = $row['user_id'];
-        $unpaidCount = (int)$row['unpaid_count'];
+        // আজকে এই ইউজারকে এই টাইপের মেইল আগে পাঠানো হয়ে থাকলে স্কিপ করা হলো
+        $checkSent->execute([$sub['user_id'], $type]);
+        if ($checkSent->rowCount() > 0) {
+            continue;
+        }
 
-        // ইউজারের বর্তমান স্ট্যাটাস ও ইমেইল চেক করা (যাতে আগে থেকে সাসপেন্ড থাকলে লুপে না পড়ে, এবং মেইল পাঠানো যায়)
-        $userStatusQuery = $db->prepare("SELECT status, full_name, email FROM users WHERE user_id = ?");
-        $userStatusQuery->execute([$uid]);
-        $userRow = $userStatusQuery->fetch(PDO::FETCH_ASSOC);
-        $currentStatus = $userRow['status'];
+        if (empty($to)) {
+            continue;
+        }
 
-        if ($unpaidCount == 1 || $unpaidCount == 2) {
+        // মেইলের সাবজেক্ট এবং টাইম লজিক
+        if ($days == 0) {
+            $rawSubject = "🚨 URGENT: Your Internet Expires TODAY!";
+            $time_msg = "expires TODAY";
+        } else {
+            $rawSubject = "⏳ Reminder: Your Internet Expires in $days Day(s)";
+            $time_msg = "will expire in $days day(s)";
+        }
+        $subject = mb_encode_mimeheader($rawSubject, 'UTF-8');
 
-            $type = ($unpaidCount == 1) ? 'billing_warning_1' : 'billing_warning_2';
-            $msg = ($unpaidCount == 1)
-                ? "Warning: You have 1 unpaid invoice."
-                : "Final Warning: You have 2 unpaid invoices. Please pay immediately.";
+        // মেইলের বডি
+        $message = "Dear " . $sub['full_name'] . ",\n\n";
+        $message .= "This is a gentle reminder that your internet package ({$sub['package_name']}) $time_msg.\n";
+        $message .= "Please log in to your dashboard and pay the renewal fee of ৳" . number_format($sub['price'], 2) . " to avoid disconnection.\n\n";
+        $message .= "Login here: https://yourwebsite.com/login.php\n\n";
+        $message .= "Thank you,\nAMAR IT Billing Team";
 
-            // ফিক্স ২: একই দিনে বারবার যেন মেসেজ না যায় তার চেক বসানো হলো
-            $checkWarning = $db->prepare("SELECT notification_id FROM notifications WHERE user_id = ? AND type = ? AND DATE(sent_at) = CURDATE()");
-            $checkWarning->execute([$uid, $type]);
+        $headers = "From: billing@amarit.com\r\n";
+        $headers .= "Reply-To: support@amarit.com\r\n";
+        $headers .= "MIME-Version: 1.0\r\n";
+        $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
 
-            if ($checkWarning->rowCount() == 0) {
-
-                if (!empty($userRow['email'])) {
-                    $subject = ($unpaidCount == 1) ? "Unpaid Invoice Reminder" : "Final Notice: Unpaid Invoices";
-                    $headers = "From: billing@yourisp.com\r\n";
-                    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-                    $body = "
-                    <h3>Billing Notice</h3>
-                    <p>{$msg}</p>
-                    <p>Please log in to your dashboard and clear your due balance to avoid service interruption.</p>
-                    ";
-                    @mail($userRow['email'], $subject, $body, $headers);
-                }
-                $db->prepare("INSERT INTO notifications (user_id, type, message) VALUES (?, ?, ?)")->execute([$uid, $type, $msg]);
-            }
-        } elseif ($unpaidCount >= 3) {
-
-            // ফিক্স ৩: ইউজার যদি আগে থেকেই 'suspended' না থাকে, তবেই শুধু তাকে সাসপেন্ড করা হবে
-            if ($currentStatus !== 'suspended') {
-                $db->prepare("UPDATE users SET status = 'suspended' WHERE user_id = ?")->execute([$uid]);
-                $db->prepare("UPDATE subscriptions SET status = 'suspended' WHERE user_id = ? AND status = 'active'")->execute([$uid]);
-
-                $msg = "Your connection has been suspended due to 3 unpaid invoices.";
-                $db->prepare("INSERT INTO notifications (user_id, type, message) VALUES (?, 'suspension', ?)")->execute([$uid, $msg]);
-
-                if (!empty($userRow['email'])) {
-                    $subject = "Connection Suspended";
-                    $headers = "From: billing@yourisp.com\r\n";
-                    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-                    $body = "
-                    <h3>Service Suspended</h3>
-                    <p>{$msg}</p>
-                    <p>Please clear your outstanding invoices to restore service.</p>
-                    ";
-                    @mail($userRow['email'], $subject, $body, $headers);
-                }
-            }
+        // মেইল সেন্ড করা (যদি আপনার আগের PHPMailer এর কোড থাকে, তবে mail() এর বদলে সেটা এখানে বসাতে পারেন)
+        if (mail($to, $subject, $message, $headers)) {
+            $emailCount++;
+            $logSent->execute([$sub['user_id'], $type, $message]);
         }
     }
+    echo "[$emailCount] Warning emails sent.\n";
+    echo "Cron Check Completed Successfully.\n";
 
-    $db->commit();
-    echo "Cron executed successfully.";
+} catch (PDOException $e) {
+    echo "Database Error: " . $e->getMessage();
 } catch (Exception $e) {
-
-    if ($db->inTransaction()) {
-        $db->rollBack();
-    }
-    echo "Cron Failed: " . $e->getMessage();
+    echo "General Error: " . $e->getMessage();
 }
