@@ -11,15 +11,30 @@
 
     <nav class="sidebar-nav">
         <a class="nav-link @if (Route::is('dashboard')) active @endif" href="{{ url('dashboard') }}" aria-current="page">
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> e7d21a1 (hw districts add)
             <span class="nav-icon"><i class="bi bi-speedometer2" aria-hidden="true"></i></span>
             <span class="nav-text">Dashboard</span>
         </a>
         {{-- <a class="nav-link @if (Route::is('students')) active @endif " href="{{ route('students') }}"> --}}
+<<<<<<< HEAD
         <a class="nav-link @if (Route::is('students.index')) active @endif "href="{{ route('students.index') }}">
             <span class="nav-icon"><i class="bi bi-people" aria-hidden="true"></i></span>
             <span class="nav-text">Students</span>
         </a>
+=======
+        <a class="nav-link @if (Route::is('students.index')) active @endif " href="{{ route('students.index') }}">
+            <span class="nav-icon"><i class="bi bi-people" aria-hidden="true"></i></span>
+            <span class="nav-text">Students</span>
+        </a>
+        <a class="nav-link @if (Route::is('districts.index')) active @endif " href="{{ route('districts.index') }}">
+            <span class="nav-icon"><i class="bi bi-geo-alt" aria-hidden="true"></i></span>
+            <span class="nav-text">Districts</span>
+        </a>
+>>>>>>> e7d21a1 (hw districts add)
 
     </nav>
 
@@ -34,4 +49,8 @@
         <span class="status-dot"></span>
         <span class="sidebar-footer-text">System running smoothly</span>
     </div>
+<<<<<<< HEAD
 </aside>
+=======
+</aside>
+>>>>>>> e7d21a1 (hw districts add)
