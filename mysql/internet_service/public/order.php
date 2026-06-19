@@ -98,7 +98,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $adminQuery = $db->query("SELECT user_id FROM users WHERE role = 'admin' LIMIT 1")->fetch();
         if ($adminQuery) {
             $package_name = $package['name'] ?? 'Custom Package';
-            $notif_msg = "🔥 New Order: {$full_name} requested a new connection (Package: {$package_name}). Please assign a tech from 'Manage Customers'.";
+            $notif_msg = "New Order: {$full_name} requested a new connection (Package: {$package_name}). Please Assign Field Engineer from 'Manage Customers'.";
             $db->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)")->execute([$adminQuery['user_id'], $notif_msg]);
         }
 

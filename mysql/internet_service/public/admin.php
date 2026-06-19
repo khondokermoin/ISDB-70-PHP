@@ -3,13 +3,22 @@ ob_start();
 session_start();
 
 // ==========================================
-// 🔥 Security Check
+// 🔥 ১. Security Check (সবার আগে)
 // ==========================================
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    // যদি কেউ লগইন ছাড়া AJAX রিকোয়েস্ট পাঠায়, তাকে ০ ফেরত দেবে
+    if (isset($_GET['action']) && $_GET['action'] === 'get_unread_count') {
+        header('Content-Type: application/json');
+        echo json_encode(['unread' => 0]);
+        exit;
+    }
     header("Location: login.php");
     exit;
 }
 
+// ==========================================
+// 🔥 ২. Database Connections & Models (এরপর ডাটাবেস)
+// ==========================================
 require_once '../config/database.php';
 require_once '../src/Models/Package.php';
 
@@ -17,12 +26,28 @@ $database = new Database();
 $db = $database->getConnection();
 $packageModel = new Package($db);
 
+// ==========================================
+// 🔥 ৩. AJAX: Unread Notification Count (ডাটাবেস পাওয়ার পর)
+// ==========================================
+if (isset($_GET['action']) && $_GET['action'] === 'get_unread_count') {
+    header('Content-Type: application/json');
+    try {
+        $stmt = $db->prepare("SELECT COUNT(*) as unread FROM notifications WHERE user_id = ? AND is_read = 0");
+        $stmt->execute([$_SESSION['user_id']]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        echo json_encode(['unread' => (int)$row['unread']]);
+    } catch (Exception $e) {
+        echo json_encode(['unread' => 0]);
+    }
+    exit; // এখানেই কোড থামিয়ে দিতে হবে, নাহলে পুরো HTML লোড হয়ে যাবে
+}
+
+// এরপর থেকে আপনার বাকি কোড শুরু...
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
 /* =========================================================
    🔥 NOTIFICATION READ & REDIRECT SYSTEM
-   FIX: This block now also lives here (not just admin_actions.php)
-   so that admin_header.php can link to admin.php?action=read_and_redirect
+   FIX: Properly routing payments to billings and orders to users.
 ========================================================= */
 if ($action == 'read_and_redirect' && isset($_GET['notif_id'])) {
 
@@ -30,28 +55,43 @@ if ($action == 'read_and_redirect' && isset($_GET['notif_id'])) {
 
     // Mark as read — scoped to logged-in admin only
     $db->prepare("UPDATE notifications SET is_read = 1 WHERE notification_id = ? AND user_id = ?")
-       ->execute([$notif_id, $_SESSION['user_id']]);
+        ->execute([$notif_id, $_SESSION['user_id']]);
 
     // Fetch message
     $stmt = $db->prepare("SELECT message FROM notifications WHERE notification_id = ? AND user_id = ?");
     $stmt->execute([$notif_id, $_SESSION['user_id']]);
     $nData = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $url = "admin.php?page=dashboard";
+    // ১. প্রথমে চেক করবে admin_header.php থেকে কোনো ডাইনামিক লিঙ্ক এসেছে কি না
+    if (isset($_GET['redirect'])) {
+        $url = urldecode($_GET['redirect']);
+    } else {
+        // ২. না আসলে এই লজিক ব্যবহার করবে (Fall-back logic)
+        $url = "admin.php?page=dashboard";
 
-    if ($nData) {
-        $m = strtolower($nData['message']);
+        if ($nData) {
+            $m = strtolower($nData['message']);
 
-        if (strpos($m, 'payment') !== false || strpos($m, 'ticket') !== false || strpos($m, 'support') !== false) {
-            $url = "admin.php?page=tickets";
-        } elseif (strpos($m, 'invoice') !== false || strpos($m, 'bill') !== false) {
-            $url = "admin.php?page=billings";
-        } elseif (strpos($m, 'customer') !== false || strpos($m, 'user') !== false) {
-            $url = "admin.php?page=users";
-        } elseif (strpos($m, 'staff') !== false || strpos($m, 'technician') !== false) {
-            $url = "admin.php?page=staff";
-        } elseif (strpos($m, 'package') !== false || strpos($m, 'plan') !== false) {
-            $url = "admin.php?page=packages";
+            // 🔥 FIX: Payment, Invoice, Upgrade -> Billings-এ যাবে
+            if (strpos($m, 'payment') !== false || strpos($m, 'invoice') !== false || strpos($m, 'bill') !== false || strpos($m, 'upgrade') !== false) {
+                $url = "admin.php?page=billings";
+            }
+            // 🔥 FIX: Order, Connection -> New Users Requests-এ যাবে
+            elseif (strpos($m, 'order') !== false || strpos($m, 'connection') !== false) {
+                $url = "admin.php?page=users&filter=new";
+            }
+            // Ticket, Job, Support -> Tickets-এ যাবে
+            elseif (strpos($m, 'ticket') !== false || strpos($m, 'job') !== false || strpos($m, 'support') !== false) {
+                $url = "admin.php?page=tickets";
+            }
+            // Staff, Technician -> Staff পেজে
+            elseif (strpos($m, 'staff') !== false || strpos($m, 'technician') !== false) {
+                $url = "admin.php?page=staff";
+            }
+            // Package, Plan -> Packages পেজে
+            elseif (strpos($m, 'package') !== false || strpos($m, 'plan') !== false) {
+                $url = "admin.php?page=packages";
+            }
         }
     }
 
@@ -110,7 +150,7 @@ if (isset($_GET['action'])) {
 
     if ($action == 'delete_zone' && isset($_GET['id'])) {
         $db->prepare("DELETE FROM coverage_zones WHERE notification_id = ?")
-           ->execute([(int)$_GET['id']]);
+            ->execute([(int)$_GET['id']]);
 
         header("Location: admin.php?page=coverage_admin&msg=zone_deleted");
         exit;
@@ -137,7 +177,7 @@ if (isset($_GET['action'])) {
     // FIX #2: Mark All Notifications Read — scoped to logged-in admin only
     if ($action == 'mark_notifs_read') {
         $db->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0")
-           ->execute([$_SESSION['user_id']]);
+            ->execute([$_SESSION['user_id']]);
 
         header("Location: admin.php");
         exit;
@@ -214,7 +254,7 @@ if ($action == 'assign_tech' && isset($_GET['uid']) && $_SERVER['REQUEST_METHOD'
 
         $notif_msg = "🚨 New Job: You have been assigned for a New Connection Setup (Customer ID: #$uid). Please check your pending tasks.";
         $db->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)")
-           ->execute([$staff_id, $notif_msg]);
+            ->execute([$staff_id, $notif_msg]);
     }
 
     header("Location: admin.php?page=$redirect&msg=tech_assigned");
@@ -263,7 +303,7 @@ if ($action == 'mark_paid' && isset($_GET['id'])) {
     if ($invData) {
         // ১. ইনভয়েস পেইড করা
         $db->prepare("UPDATE invoices SET status = 'paid' WHERE invoice_id = ?")->execute([$inv_id]);
-        
+
         // ২. ক্যাশ পেমেন্ট রেকর্ড ইনসার্ট করা
         $db->prepare("
             INSERT INTO payments (invoice_id, user_id, amount, method, transaction_ref) 
@@ -278,7 +318,7 @@ if ($action == 'mark_paid' && isset($_GET['id'])) {
             // আপগ্রেড লজিক: প্যাকেজ পরিবর্তন হবে এবং মেয়াদ "আজ থেকে" শুরু হবে
             $invoice_parts = explode('-', $invData['invoice_number']);
             $new_pkg_id = (isset($invoice_parts[1])) ? (int)$invoice_parts[1] : $target_package_id;
-            
+
             $pkgStmt = $db->prepare("SELECT duration_days FROM packages WHERE package_id = ?");
             $pkgStmt->execute([$new_pkg_id]);
             $newPkg = $pkgStmt->fetch();
@@ -293,11 +333,11 @@ if ($action == 'mark_paid' && isset($_GET['id'])) {
 
             // ইনভয়েসের period আপডেট
             $db->prepare("UPDATE invoices SET period_start = CURDATE(), period_end = DATE_ADD(CURDATE(), INTERVAL ? DAY) WHERE invoice_id = ?")
-               ->execute([$duration_days, $inv_id]);
-            
+                ->execute([$duration_days, $inv_id]);
+
             // সাপোর্ট টিকিট অটো-ক্লোজ করা
             $db->prepare("UPDATE tickets SET status = 'resolved' WHERE user_id = ? AND category = 'Package Upgrade' AND status != 'resolved'")
-               ->execute([$invData['user_id']]);
+                ->execute([$invData['user_id']]);
         } else {
             // সাধারণ রিনিউ লজিক
             $current_expiry = $invData['end_date'];
@@ -310,7 +350,7 @@ if ($action == 'mark_paid' && isset($_GET['id'])) {
             ")->execute([$base_date, $duration_days, $invData['subscription_id']]);
 
             $db->prepare("UPDATE invoices SET period_start = ?, period_end = DATE_ADD(?, INTERVAL ? DAY) WHERE invoice_id = ?")
-               ->execute([$base_date, $base_date, $duration_days, $inv_id]);
+                ->execute([$base_date, $base_date, $duration_days, $inv_id]);
         }
 
         // ইউজার স্ট্যাটাস একটিভ করা
@@ -357,7 +397,7 @@ if ($action == 'toggle_staff' && isset($_GET['id']) && isset($_GET['status'])) {
     $new_status = in_array($_GET['status'], $allowed_statuses) ? $_GET['status'] : 'suspended';
 
     $db->prepare("UPDATE users SET status = ? WHERE user_id = ? AND role = 'staff'")
-       ->execute([$new_status, (int)$_GET['id']]);
+        ->execute([$new_status, (int)$_GET['id']]);
 
     header("Location: admin.php?page=staff&msg=status_updated");
     exit;
@@ -369,10 +409,10 @@ if ($action == 'delete_staff' && isset($_GET['id'])) {
 
     // Unassign from any open tickets before deleting
     $db->prepare("UPDATE tickets SET assigned_to = NULL WHERE assigned_to = ? AND status != 'resolved'")
-       ->execute([$staff_id]);
+        ->execute([$staff_id]);
 
     $db->prepare("DELETE FROM users WHERE user_id = ? AND role = 'staff'")
-       ->execute([$staff_id]);
+        ->execute([$staff_id]);
 
     header("Location: admin.php?page=staff&msg=deleted");
     exit;
@@ -788,17 +828,26 @@ elseif ($page == 'coverage_admin') {
     </div>
 
     <script>
-        function openAddModal()  { document.getElementById('addModal').classList.remove('hidden'); }
-        function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); }
+        function openAddModal() {
+            document.getElementById('addModal').classList.remove('hidden');
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+        }
+
         function openEditModal(button) {
-            document.getElementById('edit_id').value          = button.getAttribute('data-id');
-            document.getElementById('edit_district').value    = button.getAttribute('data-district');
-            document.getElementById('edit_upazila').value     = button.getAttribute('data-upazila');
-            document.getElementById('edit_status').value      = button.getAttribute('data-status');
+            document.getElementById('edit_id').value = button.getAttribute('data-id');
+            document.getElementById('edit_district').value = button.getAttribute('data-district');
+            document.getElementById('edit_upazila').value = button.getAttribute('data-upazila');
+            document.getElementById('edit_status').value = button.getAttribute('data-status');
             document.getElementById('edit_description').value = button.getAttribute('data-desc');
             document.getElementById('editModal').classList.remove('hidden');
         }
-        function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
     </script>
 <?php
 }
@@ -890,56 +939,178 @@ elseif ($page == 'staff') {
 // 🔥 EXPENSES
 // ==========================================
 elseif ($page == 'expenses') {
-    $expenses = $db->query("SELECT * FROM expenses ORDER BY expense_date DESC")->fetchAll(PDO::FETCH_ASSOC);
+    // Fetching Expenses List
+    $expenses = $db->query("SELECT * FROM expenses ORDER BY expense_date DESC LIMIT 50")->fetchAll(PDO::FETCH_ASSOC);
 ?>
-    <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
-            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa fa-minus-circle text-red-500 mr-2"></i> Add Daily Expense</h3>
-            <?php if (isset($_GET['msg']) && $_GET['msg'] == 'invalid_amount'): ?>
-                <p class="text-red-500 text-sm mb-3 font-bold">Invalid amount. Must be greater than 0.</p>
-            <?php endif; ?>
-            <form action="admin.php?action=add_expense" method="POST" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Category</label>
-                    <select name="category" required class="w-full border px-3 py-2 rounded outline-none focus:border-red-500 bg-gray-50">
-                        <option value="Bandwidth Bill">Bandwidth Bill</option>
-                        <option value="Staff Salary">Staff Salary</option>
-                        <option value="Electricity Bill">Electricity Bill</option>
-                        <option value="Office Rent">Office Rent</option>
-                        <option value="Fiber Maintenance">Fiber Maintenance</option>
-                        <option value="Others">Others</option>
-                    </select>
+
+    <!-- Main Content Area: Form & Table -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Left: Add Expense Form (Red Theme & Modern UX) -->
+        <div class="lg:col-span-1">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-6">
+                <!-- Header -->
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fa fa-minus-circle text-red-600 text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Add Expense</h3>
+                        <p class="text-xs text-gray-500">Record daily business costs</p>
+                    </div>
                 </div>
-                <div><label class="block text-xs font-bold text-gray-600 mb-1">Amount (৳)</label><input type="number" name="amount" min="1" required class="w-full border px-3 py-2 rounded outline-none"></div>
-                <div><label class="block text-xs font-bold text-gray-600 mb-1">Date</label><input type="date" name="expense_date" value="<?php echo date('Y-m-d'); ?>" required class="w-full border px-3 py-2 rounded outline-none"></div>
-                <div><label class="block text-xs font-bold text-gray-600 mb-1">Short Note</label><textarea name="description" class="w-full border px-3 py-2 rounded outline-none"></textarea></div>
-                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded shadow transition">Save Expense</button>
-            </form>
+
+                <!-- Alerts -->
+                <?php if (isset($_GET['msg']) && $_GET['msg'] == 'invalid_amount'): ?>
+                    <div class="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg flex items-center text-red-600 text-sm">
+                        <i class="fa fa-exclamation-circle mr-2"></i> Invalid amount. Must be > 0.
+                    </div>
+                <?php elseif (isset($_GET['msg']) && $_GET['msg'] == 'success'): ?>
+                    <div class="mb-4 p-3 bg-green-50 border border-green-100 rounded-lg flex items-center text-green-600 text-sm">
+                        <i class="fa fa-check-circle mr-2"></i> Expense added successfully!
+                    </div>
+                <?php endif; ?>
+
+                <!-- Form -->
+                <form action="admin.php?action=add_expense" method="POST" class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Category</label>
+                        <div class="relative">
+                            <i class="fa fa-tags absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <select name="category" required class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-gray-50 text-sm transition">
+                                <option value="Bandwidth Bill">Bandwidth Bill</option>
+                                <option value="Staff Salary">Staff Salary</option>
+                                <option value="Electricity Bill">Electricity Bill</option>
+                                <option value="Office Rent">Office Rent</option>
+                                <option value="Fiber Maintenance">Fiber Maintenance</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Amount (৳)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">৳</span>
+                            <input type="number" name="amount" min="1" required placeholder="0.00" class="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-gray-50 text-sm transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Date</label>
+                        <div class="relative">
+                            <i class="fa fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="date" name="expense_date" value="<?php echo date('Y-m-d'); ?>" required class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-gray-50 text-sm transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Short Note</label>
+                        <textarea name="description" rows="3" placeholder="Add a brief description..." class="w-full px-4 py-2.5 border border-gray-200 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-gray-50 text-sm transition resize-none"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center space-x-2 active:scale-95">
+                        <i class="fa fa-save"></i>
+                        <span>Save Expense</span>
+                    </button>
+                </form>
+            </div>
         </div>
 
-        <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa fa-list text-gray-500 mr-2"></i> Expense List</h3>
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-left text-sm">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="py-3 px-4">Date</th>
-                            <th class="py-3 px-4">Category</th>
-                            <th class="py-3 px-4">Note</th>
-                            <th class="py-3 px-4 text-right">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($expenses as $ex): ?>
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="py-3 px-4"><?php echo date('d M Y', strtotime($ex['expense_date'])); ?></td>
-                                <td class="py-3 px-4 font-bold text-red-600"><?php echo htmlspecialchars($ex['category']); ?></td>
-                                <td class="py-3 px-4 text-gray-500"><?php echo htmlspecialchars($ex['description']); ?></td>
-                                <td class="py-3 px-4 text-right font-bold">৳<?php echo number_format($ex['amount']); ?></td>
+        <!-- Right: Expense Ledger / Table -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <!-- Table Header -->
+                <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Expense Ledger</h3>
+                        <p class="text-xs text-gray-500 mt-1">Recent financial outflows</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition flex items-center">
+                            <i class="fa fa-filter mr-2"></i> Filter
+                        </button>
+                        <button class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition flex items-center">
+                            <i class="fa fa-download mr-2"></i> Export
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table Body -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left text-sm">
+                        <thead class="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th class="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Category & Note</th>
+                                <th class="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Amount</th>
+                                <th class="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Actions</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            <?php if (empty($expenses)): ?>
+                                <!-- Empty State -->
+                                <tr>
+                                    <td colspan="4" class="py-16 text-center">
+                                        <div class="flex flex-col items-center">
+                                            <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                                                <i class="fa fa-receipt text-red-400 text-2xl"></i>
+                                            </div>
+                                            <p class="text-gray-500 font-medium">No expenses recorded yet.</p>
+                                            <p class="text-gray-400 text-xs mt-1">Start by adding your first expense from the left panel.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php else: ?>
+                                <!-- Data Rows -->
+                                <?php foreach ($expenses as $ex): ?>
+                                    <tr class="hover:bg-gray-50/50 transition-colors group">
+                                        <td class="py-4 px-6 whitespace-nowrap">
+                                            <p class="font-semibold text-gray-800"><?php echo date('d M', strtotime($ex['expense_date'])); ?></p>
+                                            <p class="text-xs text-gray-400"><?php echo date('Y', strtotime($ex['expense_date'])); ?></p>
+                                        </td>
+                                        <td class="py-4 px-6">
+                                            <div class="flex items-center">
+                                                <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-red-50 text-red-600 border border-red-100 mr-3 whitespace-nowrap">
+                                                    <?php echo htmlspecialchars($ex['category']); ?>
+                                                </span>
+                                                <p class="text-gray-500 text-sm truncate max-w-[150px] lg:max-w-[200px]">
+                                                    <?php echo htmlspecialchars($ex['description'] ?: 'No description'); ?>
+                                                </p>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-6 whitespace-nowrap text-right">
+                                            <p class="font-bold text-gray-800">৳<?php echo number_format($ex['amount']); ?></p>
+                                        </td>
+                                        <td class="py-4 px-6 whitespace-nowrap text-center">
+                                            <!-- Hover Actions -->
+                                            <div class="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition" title="Edit">
+                                                    <i class="fa fa-pen text-xs"></i>
+                                                </button>
+                                                <button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition" title="Delete">
+                                                    <i class="fa fa-trash text-xs"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Table Footer -->
+                <?php if (!empty($expenses)): ?>
+                    <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-between items-center text-xs text-gray-500">
+                        <p>Showing <span class="font-semibold text-gray-700"><?php echo count($expenses); ?></span> recent entries</p>
+                        <div class="flex space-x-1">
+                            <button class="px-3 py-1.5 rounded-md bg-white border border-gray-200 hover:bg-gray-100 transition">Previous</button>
+                            <button class="px-3 py-1.5 rounded-md bg-red-600 text-white font-semibold">1</button>
+                            <button class="px-3 py-1.5 rounded-md bg-white border border-gray-200 hover:bg-gray-100 transition">Next</button>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -994,9 +1165,9 @@ elseif ($page == 'users') {
         </div>
 
         <div class="flex space-x-2 mb-6 overflow-x-auto">
-            <a href="admin.php?page=users&filter=all"       class="px-4 py-2 rounded font-bold text-sm transition <?php echo ($filter == 'all')       ? 'bg-blue-600 text-white shadow'   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'; ?>">All Customers</a>
-            <a href="admin.php?page=users&filter=new"       class="px-4 py-2 rounded font-bold text-sm transition <?php echo ($filter == 'new')       ? 'bg-yellow-500 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'; ?>">New Requests</a>
-            <a href="admin.php?page=users&filter=active"    class="px-4 py-2 rounded font-bold text-sm transition <?php echo ($filter == 'active')    ? 'bg-green-600 text-white shadow'  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'; ?>">Active</a>
+            <a href="admin.php?page=users&filter=all" class="px-4 py-2 rounded font-bold text-sm transition <?php echo ($filter == 'all')       ? 'bg-blue-600 text-white shadow'   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'; ?>">All Customers</a>
+            <a href="admin.php?page=users&filter=new" class="px-4 py-2 rounded font-bold text-sm transition <?php echo ($filter == 'new')       ? 'bg-yellow-500 text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'; ?>">New Requests</a>
+            <a href="admin.php?page=users&filter=active" class="px-4 py-2 rounded font-bold text-sm transition <?php echo ($filter == 'active')    ? 'bg-green-600 text-white shadow'  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'; ?>">Active</a>
             <a href="admin.php?page=users&filter=suspended" class="px-4 py-2 rounded font-bold text-sm transition <?php echo ($filter == 'suspended') ? 'bg-red-600 text-white shadow'    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'; ?>">Suspended</a>
         </div>
 
@@ -1191,7 +1362,7 @@ elseif ($page == 'view_ticket' && isset($_GET['id'])) {
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['assign_staff'])) {
         $staff_id = !empty($_POST['staff_id']) ? (int)$_POST['staff_id'] : NULL;
         $db->prepare("UPDATE tickets SET assigned_to = ? WHERE ticket_id = ?")
-           ->execute([$staff_id, $ticket_id]);
+            ->execute([$staff_id, $ticket_id]);
         header("Location: admin.php?page=view_ticket&id=$ticket_id");
         exit;
     }
@@ -1200,11 +1371,11 @@ elseif ($page == 'view_ticket' && isset($_GET['id'])) {
         $msg = trim($_POST['reply_message']);
         if (!empty($msg)) {
             $db->prepare("INSERT INTO ticket_replies (ticket_id, user_id, message) VALUES (?, ?, ?)")
-               ->execute([$ticket_id, $_SESSION['user_id'], $msg]);
+                ->execute([$ticket_id, $_SESSION['user_id'], $msg]);
 
             // FIX #9: Use prepared statement instead of raw variable in query
             $db->prepare("UPDATE tickets SET status = 'processing' WHERE ticket_id = ? AND status = 'open'")
-               ->execute([$ticket_id]);
+                ->execute([$ticket_id]);
 
             header("Location: admin.php?page=view_ticket&id=$ticket_id");
             exit;

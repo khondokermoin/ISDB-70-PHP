@@ -1,9 +1,10 @@
 <?php
-// session_start(); <-- এই লাইনটি মুছে ফেলা হয়েছে
 require_once '../config/database.php';
 require_once '../config/ssl_config.php';
 
 $db = (new Database())->getConnection();
+$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
 $status = $_GET['status'] ?? '';
 
 if ($status == 'fail' || $status == 'cancel') {
@@ -15,7 +16,7 @@ if ($status == 'success' && isset($_POST['val_id'])) {
     $val_id = $_POST['val_id'];
     $invoice_id = (int)$_GET['inv_id'];
 
-    // ১. SSLCommerz Validation API Call (পেমেন্ট আসলেই হয়েছে কি না চেক করা)
+    // ১. SSLCommerz Validation
     $val_url = SSL_BASE_URL . "/validator/api/validationserverAPI.php?val_id=" . $val_id . "&store_id=" . SSL_STORE_ID . "&store_passwd=" . SSL_STORE_PASSWORD . "&v=1&format=json";
 
     $handle = curl_init();
@@ -27,25 +28,32 @@ if ($status == 'success' && isset($_POST['val_id'])) {
 
     $validationResponse = json_decode($result, true);
 
-    if (isset($validationResponse['status']) && $validationResponse['status'] == 'VALID') {
-        $trx_id = $validationResponse['tran_id']; // Transaction ID
+    if (isset($validationResponse['status']) && in_array($validationResponse['status'], ['VALID', 'VALIDATED'])) {
+        $trx_id = $validationResponse['tran_id'];
 
         try {
             $db->beginTransaction();
 
-            // ইনভয়েস, সাবস্ক্রিপশন এবং বর্তমান প্যাকেজের ডাটা আনা
+            // ইনভয়েস এবং সাবস্ক্রিপশনের ডাটা আনা
             $inv = $db->prepare("
-                SELECT i.user_id, i.amount, i.subscription_id, i.invoice_number, s.end_date, p.duration_days, p.package_id, u.full_name
+                SELECT i.user_id, i.amount, i.subscription_id, i.invoice_number, 
+                       s.end_date, s.status AS sub_status, p.duration_days, p.package_id, u.full_name
                 FROM invoices i 
-                JOIN subscriptions s ON i.subscription_id = s.subscription_id 
-                JOIN packages p ON s.package_id = p.package_id 
+                LEFT JOIN subscriptions s ON i.subscription_id = s.subscription_id 
+                LEFT JOIN packages p ON s.package_id = p.package_id 
                 JOIN users u ON i.user_id = u.user_id
                 WHERE i.invoice_id = ?
             ");
             $inv->execute([$invoice_id]);
             $invData = $inv->fetch();
 
-            if ($invData && $validationResponse['amount'] >= $invData['amount']) {
+            if (!$invData) {
+                header("Location: user_dashboard.php?msg=invoice_not_found");
+                exit;
+            }
+
+            // অ্যামাউন্ট চেক
+            if ((float)$validationResponse['amount'] >= (float)$invData['amount']) {
 
                 // ১. ইনভয়েস পেইড করা
                 $db->prepare("UPDATE invoices SET status = 'paid' WHERE invoice_id = ?")->execute([$invoice_id]);
@@ -57,67 +65,78 @@ if ($status == 'success' && isset($_POST['val_id'])) {
                 ")->execute([$invoice_id, $invData['user_id'], $invData['amount'], $trx_id]);
 
                 $target_package_id = $invData['package_id'];
-                $duration_days = $invData['duration_days'];
+                $duration_days = $invData['duration_days'] ?? 30;
                 $is_upgrade = (strpos($invData['invoice_number'], 'UPG-') === 0);
 
+                $notif_msg = "";
+
                 // =========================================================
-                // 🔥 PROFESSIONAL UPGRADE & RENEWAL LOGIC
+                // 🔥 প্যাকেজ আপগ্রেড লজিক (Crash-proof)
                 // =========================================================
                 if ($is_upgrade) {
                     $invoice_parts = explode('-', $invData['invoice_number']);
                     $new_pkg_id = (isset($invoice_parts[1])) ? (int)$invoice_parts[1] : $target_package_id;
 
-                    $pkgStmt = $db->prepare("SELECT duration_days FROM packages WHERE package_id = ?");
+                    // 🔥 নতুন লজিক: ডাটাবেস থেকে প্যাকেজের আসল নামটি (Name) খুঁজে বের করা
+                    $pkgStmt = $db->prepare("SELECT name FROM packages WHERE package_id = ?");
                     $pkgStmt->execute([$new_pkg_id]);
-                    $newPkg = $pkgStmt->fetch();
-                    $duration_days = $newPkg ? $newPkg['duration_days'] : 30;
+                    $pkgInfo = $pkgStmt->fetch(PDO::FETCH_ASSOC);
+                    $new_pkg_name = $pkgInfo ? $pkgInfo['name'] : "Unknown Package";
 
-                    // সাবস্ক্রিপশন আপডেট (আজ থেকে শুরু)
                     $db->prepare("
                         UPDATE subscriptions 
-                        SET package_id = ?, status = 'active', start_date = CURDATE(), end_date = DATE_ADD(CURDATE(), INTERVAL ? DAY) 
+                        SET package_id = ?, status = 'active', end_date = DATE_ADD(CURDATE(), INTERVAL ? DAY) 
                         WHERE subscription_id = ?
                     ")->execute([$new_pkg_id, $duration_days, $invData['subscription_id']]);
 
-                    // ইনভয়েসের period আপডেট
-                    $db->prepare("UPDATE invoices SET period_start = CURDATE(), period_end = DATE_ADD(CURDATE(), INTERVAL ? DAY) WHERE invoice_id = ?")
-                        ->execute([$duration_days, $invoice_id]);
+                    $db->prepare("UPDATE users SET status = 'active' WHERE user_id = ?")->execute([$invData['user_id']]);
 
-                    // টিকিট ক্লোজ করা
-                    $db->prepare("UPDATE tickets SET status = 'resolved' WHERE user_id = ? AND category = 'Package Upgrade' AND status != 'resolved'")
-                        ->execute([$invData['user_id']]);
+                    // 🔥 আপডেট করা আপগ্রেড মেসেজ (এখন ID এর বদলে $new_pkg_name দেখাবে)
+                    $notif_msg = "Upgrade Payment: {$invData['full_name']} paid #{$invData['invoice_number']} via SSLCommerz. Action: Update Mikrotik Speed (Pkg: {$new_pkg_name}).";
                 } else {
-                    // সাধারণ রিনিউ লজিক
+                    // =========================================================
+                    // 🔥 নতুন কানেকশন এবং মাসিক রিনিউয়াল লজিক
+                    // =========================================================
+                    $sub_status = $invData['sub_status'] ?? 'pending';
                     $current_expiry = $invData['end_date'];
-                    $base_date = ($current_expiry && strtotime($current_expiry) > time()) ? $current_expiry : date('Y-m-d');
 
-                    $db->prepare("
-                        UPDATE subscriptions 
-                        SET status = 'active', end_date = DATE_ADD(?, INTERVAL ? DAY) 
-                        WHERE subscription_id = ?
-                    ")->execute([$base_date, $duration_days, $invData['subscription_id']]);
+                    // 🔥 FIX: end_date ফাঁকা থাকলে বা status pending/inactive থাকলে সেটাকে ১০০% নতুন কানেকশন ধরবে!
+                    if (empty($current_expiry) || in_array($sub_status, ['pending', 'inactive'])) {
 
-                    $db->prepare("UPDATE invoices SET period_start = ?, period_end = DATE_ADD(?, INTERVAL ? DAY) WHERE invoice_id = ?")
-                        ->execute([$base_date, $base_date, $duration_days, $invoice_id]);
+                        // সাবস্ক্রিপশন স্ট্যাটাস জোর করে 'pending' করে রাখা হচ্ছে, যাতে admin activate করার আগ পর্যন্ত লাইন চালু না হয়।
+                        $db->prepare("UPDATE subscriptions SET status = 'pending' WHERE subscription_id = ?")->execute([$invData['subscription_id']]);
+
+                        // আপডেট করা নতুন কানেকশন মেসেজ
+                        $notif_msg = "New Connection Payment: {$invData['full_name']} paid #{$invData['invoice_number']} via SSLCommerz. Action: Assign Field Engineer.";
+                    } else {
+                        // Monthly Renewal Logic (আগের মতোই থাকবে)
+                        $base_date = ($current_expiry && strtotime($current_expiry) > time()) ? $current_expiry : date('Y-m-d');
+
+                        $db->prepare("
+                            UPDATE subscriptions 
+                            SET status = 'active', end_date = DATE_ADD(?, INTERVAL ? DAY) 
+                            WHERE subscription_id = ?
+                        ")->execute([$base_date, $duration_days, $invData['subscription_id']]);
+
+                        $db->prepare("UPDATE users SET status = 'active' WHERE user_id = ?")->execute([$invData['user_id']]);
+
+                        $notif_msg = "Renewal Payment: {$invData['full_name']} paid #{$invData['invoice_number']} via SSLCommerz. Auto-extended.";
+                    }
                 }
 
-                // ইউজার স্ট্যাটাস একটিভ করা
-                $db->prepare("UPDATE users SET status = 'active' WHERE user_id = ?")->execute([$invData['user_id']]);
-
-                // ৩. অ্যাডমিন নোটিফিকেশন
+                // ৩. অ্যাডমিন নোটিফিকেশন পাঠানো
                 $adminQuery = $db->query("SELECT user_id FROM users WHERE role = 'admin' LIMIT 1")->fetch();
-                if ($adminQuery) {
-                    $notif_msg = $is_upgrade
-                        ? "🚀 Package Upgraded Auto: Invoice {$invData['invoice_number']} paid via SSLCommerz by {$invData['full_name']}. Package updated."
-                        : "✅ SSLCommerz Payment: Invoice {$invData['invoice_number']} paid by {$invData['full_name']}. Validity extended.";
-
+                if ($adminQuery && !empty($notif_msg)) {
                     $db->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)")->execute([$adminQuery['user_id'], $notif_msg]);
                 }
-            }
 
-            $db->commit();
-            header("Location: user_dashboard.php?msg=payment_success&trx=" . $trx_id);
-            exit;
+                $db->commit();
+                header("Location: user_dashboard.php?msg=payment_success&trx=" . $trx_id);
+                exit;
+            } else {
+                header("Location: user_dashboard.php?msg=amount_mismatch");
+                exit;
+            }
         } catch (Exception $e) {
             $db->rollBack();
             header("Location: user_dashboard.php?msg=db_error");

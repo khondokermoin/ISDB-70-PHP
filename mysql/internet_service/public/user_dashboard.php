@@ -196,12 +196,22 @@ function buildWhatsAppNumber(string $phone): string
                             <div>
                                 <p class="text-gray-500 text-sm">Package Plan</p>
                                 <h2 class="text-2xl font-bold text-gray-800 uppercase"><?php echo htmlspecialchars($sub['package_name']); ?></h2>
-                                <!-- empty() ব্যবহার করো — NULL-ও ধরবে -->
                                 <p class="text-gray-500 text-sm mt-1">Speed: <?php echo empty($sub['speed_mbps']) ? 'Custom' : $sub['speed_mbps'] . ' Mbps'; ?></p>
                             </div>
                             <div class="text-right">
                                 <p class="text-gray-500 text-sm mb-1">Connection Status</p>
-                                <span class="px-4 py-1 rounded-full text-xs font-bold <?php echo ($sub['status'] == 'active') ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-orange-100 text-orange-700 border border-orange-300'; ?>">
+                                <?php
+                                // ডায়নামিক স্ট্যাটাস কালার লজিক
+                                $statusClass = 'bg-gray-100 text-gray-700 border-gray-300';
+                                if ($sub['status'] == 'active') {
+                                    $statusClass = 'bg-green-100 text-green-700 border-green-300';
+                                } elseif ($sub['status'] == 'pending') {
+                                    $statusClass = 'bg-blue-100 text-blue-700 border-blue-300';
+                                } elseif (in_array($sub['status'], ['expired', 'suspended'])) {
+                                    $statusClass = 'bg-red-100 text-red-700 border-red-300';
+                                }
+                                ?>
+                                <span class="px-4 py-1 rounded-full text-xs font-bold border <?php echo $statusClass; ?>">
                                     <?php echo strtoupper(htmlspecialchars($sub['status'])); ?>
                                 </span>
                             </div>
@@ -209,9 +219,8 @@ function buildWhatsAppNumber(string $phone): string
 
                         <div class="mt-8 bg-gray-50 border border-gray-200 p-5 rounded-lg">
                             <p class="text-gray-600 font-semibold mb-2">Expiry Information:</p>
+
                             <?php if ($sub['status'] == 'active' && !empty($sub['end_date'])):
-                                // days_left NULL হলে (int)NULL = 0 হয়ে "Expires Today" দেখাত।
-                                // null check করে null হলে আলাদা message দেখাবে।
                                 $days_left = ($sub['days_left'] !== null) ? (int)$sub['days_left'] : null;
                             ?>
                                 <div class="flex items-center justify-between">
@@ -230,10 +239,17 @@ function buildWhatsAppNumber(string $phone): string
                                         <span class="text-sm text-gray-400 italic">Expiry date not set</span>
                                     <?php endif; ?>
                                 </div>
+
+                            <?php elseif ($sub['status'] == 'pending'): ?>
+                                <div class="flex items-center text-blue-600 bg-blue-50 p-3 rounded border border-blue-100">
+                                    <i class="fa fa-user-cog text-xl mr-3 animate-pulse"></i>
+                                    <p class="text-sm">Your connection is pending physical installation. Billing cycle will start once activated by admin.</p>
+                                </div>
+
                             <?php else: ?>
-                                <div class="flex items-center text-orange-600 bg-orange-50 p-3 rounded border border-orange-100">
-                                    <i class="fa fa-clock text-xl mr-3"></i>
-                                    <p class="text-sm">Your connection is pending admin activation. Your billing cycle will start once activated.</p>
+                                <div class="flex items-center text-red-600 bg-red-50 p-3 rounded border border-red-100">
+                                    <i class="fa fa-exclamation-triangle text-xl mr-3"></i>
+                                    <p class="text-sm">Your connection is currently suspended/expired. Please clear pending invoices to reactivate.</p>
                                 </div>
                             <?php endif; ?>
                         </div>

@@ -212,15 +212,24 @@ if (isset($db) && isset($_SESSION['user_id'])) {
                         <ul class="space-y-3" id="notifList">
                             <?php foreach ($allNotifs as $n):
                                 $notifId = isset($n['notification_id']) ? (int)$n['notification_id'] : 0;
-
-                                // [USER v2 FIX 9] invalid ID হলে continue — notif_id=0 link render হবে না
                                 if ($notifId <= 0) continue;
 
                                 $isUnread = isset($n['is_read']) && $n['is_read'] == 0;
                                 $msgLower = strtolower($n['message']);
+
+                                // 🔥 ধাপ ১: ডায়নামিক টার্গেট পেজ নির্ধারণ করা
+                                $targetUrl = "admin.php?page=tickets"; // ডিফল্ট
+                                if (strpos($msgLower, 'payment') !== false || strpos($msgLower, 'invoice') !== false || strpos($msgLower, 'upgrade') !== false) {
+                                    $targetUrl = "admin.php?page=billings";
+                                } elseif (strpos($msgLower, 'order') !== false || strpos($msgLower, 'connection') !== false) {
+                                    $targetUrl = "admin.php?page=users&filter=new";
+                                }
+
+                                // 🔥 ধাপ ২: Read Tracking লিঙ্কের সাথে টার্গেট পেজটি জুড়ে দেওয়া
+                                $actionLink = "admin.php?action=read_and_redirect&notif_id=" . $notifId . "&redirect=" . urlencode($targetUrl);
                             ?>
                                 <li class="rounded-xl border transition-all duration-300 shadow-sm <?php echo $isUnread ? 'bg-white border-red-200 shadow-md notif-unread' : 'bg-gray-50 border-gray-200 opacity-75'; ?>">
-                                    <a href="admin.php?action=read_and_redirect&notif_id=<?php echo $notifId; ?>" class="block p-4 group">
+                                    <a href="<?php echo $actionLink; ?>" class="block p-4 group">
                                         <div class="flex items-start">
                                             <div class="<?php echo $isUnread ? 'bg-red-100 text-red-600' : 'bg-gray-200 text-gray-500'; ?> rounded-full w-10 h-10 flex items-center justify-center mr-3 flex-shrink-0 transition-colors">
                                                 <?php if (strpos($msgLower, 'payment') !== false): ?>
@@ -473,11 +482,11 @@ if (isset($db) && isset($_SESSION['user_id'])) {
                     });
             }
 
-            // 🔁 প্রতি ৩০ সেকেন্ড পর পর check করবে
+            // 🔁 প্রতি ৩০ সেকেন্ড (30000 ms) পর পর check করবে
             setInterval(refreshNotificationBadge, 30000);
 
-            // ⚡ পেজ লোড হওয়ার ৫ সেকেন্ড পর প্রথমবার check (যদি এই সময়ে নতুন notification আসে)
-            setTimeout(refreshNotificationBadge, 5000);
+            // ⚡ পেজ লোড হওয়ার ২ সেকেন্ড পর প্রথমবার check
+            setTimeout(refreshNotificationBadge, 2000);
         </script>
 
         <main class="p-4 md:p-6 flex-1 overflow-y-auto custom-scrollbar bg-gray-100">
