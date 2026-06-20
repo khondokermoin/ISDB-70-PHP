@@ -25,7 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user && password_verify($password, $user['password_hash'])) {
-        if ($user['status'] !== 'active') {
+        if ($user['role'] !== 'customer' && $user['status'] !== 'active') {
             $error = "Your account is currently inactive. Contact support.";
         } else {
             session_regenerate_id(true);
