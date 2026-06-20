@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AMAR IT Presentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      body {
+        overflow: hidden;
+        background-color: #f8fafc;
+        font-family: sans-serif;
+      }
+      .slide {
+        display: none;
+        height: 100vh;
+        width: 100vw;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 2rem;
+      }
+      .slide.active {
+        display: flex;
+        animation: slideIn 0.5s ease-in-out;
+      }
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      ul {
+        text-align: left;
+        font-size: 1.5rem;
+        color: #334155;
+        line-height: 2;
+        margin-top: 2rem;
+        max-width: 800px;
+      }
+      li {
+        margin-bottom: 1rem;
+      }
+      li i {
+        color: #ea580c;
+        margin-right: 15px;
+        width: 30px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="presentation">
+      <div class="slide active">
+        <i class="fa fa-wifi text-6xl text-red-600 mb-6 animate-pulse"></i>
+        <h1 class="text-6xl font-extrabold text-gray-900 mb-4">AMAR IT</h1>
+        <h2 class="text-3xl text-gray-600 mb-8">
+          Modern ISP Billing & Management System
+        </h2>
+        <div
+          class="mt-8 bg-white p-8 rounded-xl shadow-md border-t-4 border-red-600"
+        >
+          <p class="text-2xl font-bold text-gray-800 mb-1">
+            Khondoker Moin Hossain
+          </p>
+          <p class="text-lg text-gray-500">
+            BSc in Computer Science and Engineering
+          </p>
+          <p class="text-md text-gray-400 mt-2">
+            Canadian University of Bangladesh
+          </p>
+        </div>
+      </div>
+
+      <div class="slide">
+        <h1
+          class="text-5xl font-bold text-red-600 border-b-4 border-orange-500 pb-4"
+        >
+          Challenges in Traditional ISP
+        </h1>
+        <ul>
+          <li>
+            <i class="fa fa-times-circle"></i>
+            <strong>Manual Billing:</strong> Tracking monthly bills and physical
+            invoices is error-prone.
+          </li>
+          <li>
+            <i class="fa fa-times-circle"></i>
+            <strong>Service Interruptions:</strong> Sudden disconnections
+            without automated alerts.
+          </li>
+          <li>
+            <i class="fa fa-times-circle"></i>
+            <strong>Payment Friction:</strong> Relying heavily on manual cash or
+            unverified bKash.
+          </li>
+        </ul>
+      </div>
+
+      <div class="slide">
+        <h1
+          class="text-5xl font-bold text-green-600 border-b-4 border-green-500 pb-4"
+        >
+          The "AMAR IT" Solution
+        </h1>
+        <ul>
+          <li>
+            <i class="fa fa-check-circle text-green-500"></i>
+            <strong>100% Automated Lifecycle:</strong> From auto-invoice
+            generation to suspension.
+          </li>
+          <li>
+            <i class="fa fa-check-circle text-green-500"></i>
+            <strong>Self-Service Portal:</strong> Dynamic and beautiful
+            dashboard for customers.
+          </li>
+          <li>
+            <i class="fa fa-check-circle text-green-500"></i>
+            <strong>Integrated Gateways:</strong> Real-time payment verification
+            with bKash & SSLCommerz.
+          </li>
+        </ul>
+      </div>
+
+      <div class="slide">
+        <h1
+          class="text-5xl font-bold text-blue-600 border-b-4 border-blue-500 pb-4"
+        >
+          Core Technology Stack
+        </h1>
+        <ul>
+          <li>
+            <i class="fab fa-html5 text-orange-500"></i>
+            <strong>Frontend:</strong> HTML5, Tailwind CSS, JavaScript for a
+            smooth UI/UX.
+          </li>
+          <li>
+            <i class="fab fa-php text-indigo-500"></i>
+            <strong>Backend:</strong> Highly Optimized PHP with secure
+            architecture.
+          </li>
+          <li>
+            <i class="fa fa-database text-gray-600"></i>
+            <strong>Database:</strong> MySQL utilizing Relational Structures &
+            Locks.
+          </li>
+        </ul>
+      </div>
+
+      <div class="slide">
+        <h1
+          class="text-5xl font-bold text-purple-600 border-b-4 border-purple-500 pb-4"
+        >
+          Security & Performance
+        </h1>
+        <ul>
+          <li>
+            <i class="fa fa-shield-alt text-purple-500"></i>
+            <strong>Transactions:</strong> Fast DB locks & PDO Prepared
+            Statements against SQL Injection.
+          </li>
+          <li>
+            <i class="fa fa-lock text-purple-500"></i>
+            <strong>Authentication:</strong> Strict CSRF token validation on
+            every payment request.
+          </li>
+          <li>
+            <i class="fa fa-cogs text-purple-500"></i>
+            <strong>Cron Engine:</strong> Automated background tasks avoiding
+            system freeze.
+          </li>
+        </ul>
+      </div>
+
+      <div class="slide">
+        <i class="fa fa-graduation-cap text-6xl text-gray-800 mb-6"></i>
+        <h1 class="text-6xl font-extrabold text-gray-900 mb-4">Thank You!</h1>
+        <h2 class="text-3xl text-gray-600 mb-8">
+          Open for Questions & Live Demonstration
+        </h2>
+      </div>
+    </div>
+
+    <div
+      class="fixed bottom-5 w-full flex justify-center items-center space-x-6 text-gray-400"
+    >
+      <button onclick="prevSlide()" class="hover:text-red-600 transition">
+        <i class="fa fa-arrow-left text-3xl"></i>
+      </button>
+      <span class="text-lg font-semibold tracking-wider uppercase"
+        >Use Arrow Keys</span
+      >
+      <button onclick="nextSlide()" class="hover:text-red-600 transition">
+        <i class="fa fa-arrow-right text-3xl"></i>
+      </button>
+    </div>
+
+    <script>
+      let currentSlide = 0;
+      const slides = document.querySelectorAll(".slide");
+
+      function showSlide(index) {
+        slides.forEach((s) => s.classList.remove("active"));
+        if (index >= slides.length) currentSlide = 0;
+        if (index < 0) currentSlide = slides.length - 1;
+        slides[currentSlide].classList.add("active");
+      }
+
+      function nextSlide() {
+        currentSlide++;
+        showSlide(currentSlide);
+      }
+      function prevSlide() {
+        currentSlide--;
+        showSlide(currentSlide);
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " ") nextSlide();
+        if (e.key === "ArrowLeft") prevSlide();
+      });
+    </script>
+  </body>
+</html>
