@@ -51,11 +51,14 @@ header nav .list-wrapper {
 header button {
   background: #fd6e0a;
   border: none;
+  font-weight: 700;
   color: #ffffff;
   padding: 18px 35px;
   border-radius: 5px;
 }
 header .downloadCv {
+  font-size: 20px;
+  font-weight: 700;
   background: #fd6e0a;
   border: none;
   color: #ffffff;
@@ -95,6 +98,8 @@ header #banner p {
 }
 
 header #banner .contactBtn {
+  font-size: 20px;
+  font-weight: 700;
   background: transparent;
   color: #fd6e0a;
   margin-left: 30px;
@@ -108,22 +113,349 @@ header #banner .bannerImage {
   bottom: 0;
 }
 /* ---------about me style start--------- */
-main section #about-ariea{
+#about {
   margin-top: 130px;
-  
-  
 }
-.my-info{
+
+#about .aboutArea {
+  background: #fff8f3;
+  text-align: center;
+  padding: 131px 0px;
+  border-radius: 5px;
+}
+
+#about .aboutArea h2 {
+  font-size: 35px;
+  font-weight: 700;
+  color: #181818;
+  margin-bottom: 30px;
+}
+
+#about .aboutArea p {
+  font-size: 18px;
+  font-weight: 400;
+  color: #757575;
+  max-width: 827px;
+  width: 100%;
+  line-height: 30px;
+  margin: 0 auto;
+  margin-bottom: 30px;
+}
+
+#about .aboutArea .aboutDetails {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  /* flex-wrap: wrap; */
+  gap: 50px;
   margin-top: 30px;
-  
 }
-.about-me{
- padding: 131px 157px ;
-  background: #FFF8F3;
-  border-radius:4px ;
-  
+
+#about .aboutArea .aboutDetails div {
+  text-align: center;
+}
+
+#about .aboutArea .aboutDetails h5 {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 30px;
+  color: #757575;
+  margin-bottom: 5px;
+}
+
+#about .aboutArea .aboutDetails h4 {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 30px;
+  color: #474747;
+  margin: 0;
 }
 
 /* ---------about me style end--------- */
+/* ---------what i dostyle start--------- */
+#whatIdo {
+  margin-top: 130px;
+}
+#whatIdo .title {
+  text-align: center;
+}
+#whatIdo .title h2 {
+  font-size: 35px;
+  font-weight: 700;
+  color: #181818;
+  margin-bottom: 30px;
+}
+#whatIdo .title p {
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 30px;
+  color: #757575;
+  margin-bottom: 30px;
+  max-width: 909px;
+  margin: 0 auto;
+}
+#whatIdo .skills-area .skills-cards {
+  max-width: 267px;
+  box-shadow: 0px 6px 50px 0px rgba(0, 0, 0, 0.07);
+  padding: 30px;
+}
+#whatIdo .skills-area .skills-cards h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #181818;
+  margin-bottom: 20px;
+  margin-top: 30px;
+}
+#whatIdo .skills-area {
+  display: flex;
+  margin-top: 50px;
+  justify-content: space-between;
+}
+#whatIdo .skills-area .skills-cards p {
+  font-size: 16px;
+  font-weight: 400;
+  color: #757575;
+  line-height: 28px;
+  max-width: 201px;
+}
+
+/* ---------what i dostyle end--------- */
+
+/* ---------resume start--------- */
+
+#resume {
+  margin-top: 30px;
+}
+#resume .downloadCv {
+  font-size: 20px;
+  background: #fd6e0a;
+  font-weight: 700;
+  border: none;
+  color: #ffffff;
+  padding: 17px 19px;
+  border-radius: 5px;
+  display: flex;
+  width: fit-content;
+  margin: 50px auto 0;
+  align-items: center;
+}
+#resume .downloadCv .btn-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  padding-right: 10px;
+}
+#resume .title {
+  text-align: center;
+  font-size: 35px;
+  font-weight: 700;
+  color: #181818;
+  margin-bottom: 30px;
+  margin-top: 130px;
+}
+#resume .eduExp h3 {
+  font-size: 30px;
+  font-weight: 700;
+  color: #474747;
+  margin-bottom: 30px;
+}
+#resume .eduExp h4 {
+  font-size: 25px;
+  font-weight: 700;
+  color: #474747;
+}
+#resume .eduExp h5 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #757575;
+  margin-top: 10px;
+}
+#resume .eduExp {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 113px;
+}
+#resume .eduExp p {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 28px;
+  color: #757575;
+  margin-top: 10px;
+  max-width: 484px;
+}
+#resume .item {
+  border-bottom: 1px solid #757575;
+  width: 558px;
+  padding: 30px 0px;
+}
+#resume .item:last-child {
+  border-bottom: 1px solid #d1d1d1;
+  width: 558px;
+  padding: 30px 0px;
+  border-bottom: none;
+}
+
+/* ---------resume end--------- */
+
+/* Footer Container */
+.site-footer {
+  margin-top: 113px;
+  background-color: #fff8f3; /* Light cream background */
+  color: #181818; /* Dark text color */
+  padding: 50px 20px 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Main Content Layout */
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 40px;
+}
+
+/* Left Side Styling */
+.footer-info {
+  flex: 1;
+  min-width: 300px;
+}
+
+.footer-info h2 {
+  margin-bottom: 15px;
+  font-size: 1.8em;
+  color: #181818;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.footer-info h3 {
+  margin-bottom: 20px;
+  font-size: 1.5em;
+  font-weight: 400;
+  color: #181818;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.footer-info p {
+  line-height: 1.6;
+  font-size: 0.95em;
+  color: #555;
+  margin-bottom: 20px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Social Media Icons */
+.social-icons {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.social-icons a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  color: #e67e22;
+  font-size: 1.2em;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.social-icons a:hover {
+  background-color: #fff8f3;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Right Side (Form) Styling */
+.footer-form {
+  flex: 1;
+  min-width: 300px;
+}
+
+.footer-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.footer-form input,
+.footer-form textarea {
+  padding: 14px;
+  border-radius: 6px;
+  font-size: 1em;
+  background-color: #fff;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.footer-form input::placeholder,
+.footer-form textarea::placeholder {
+  color: #95a5a6;
+}
+
+.footer-form input:focus,
+.footer-form textarea:focus {
+  border-color: #e67e22;
+  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
+}
+
+.footer-form textarea {
+  height: 120px;
+  resize: vertical;
+}
+
+.footer-form button {
+  padding: 14px 30px;
+  background-color: #e67e22; /* Orange accent color */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+}
+
+.footer-form button:hover {
+  background-color: #d35400;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(230, 126, 34, 0.3);
+}
+
+.footer-form button:active {
+  transform: scale(0.98);
+}
+
+/* Bottom Copyright Bar */
+.footer-bottom {
+  text-align: center;
+  margin-top: 50px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+  font-size: 0.9em;
+  color: #777;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .footer-info h2 {
+    font-size: 1.5em;
+  }
+
+  .footer-info h3 {
+    font-size: 1.2em;
+  }
+}
