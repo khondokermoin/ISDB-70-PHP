@@ -16,6 +16,9 @@ header .navbar {
 header .container .nav-item {
     padding-right: 48px;                                               
 }
+header .container .navbar-brand {
+    margin-right: 128px;                                               
+}
 
 header .container .nav-link {
     color: white;
@@ -32,4 +35,66 @@ header .container .btnCont {
     line-height: 16px;
     padding: 20px 48px;
     border: none;
+    margin: 12px 0px;
+}
+
+#banner{
+    background: url(./images/Image.jpg);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+}
+#banner .container h5{
+    text-transform: uppercase;
+    color: #ffffff;
+    font-style: 16px;
+    font-weight: 700;
+    
+}
+#banner .container .learnContent{
+padding: 128px 0px;
+width: 592px;
+    
+}
+#banner .container .learnContent h1{
+    text-transform: uppercase;
+    color: #ffffff;
+    font-size: 64px;
+    font-weight: 700;
+    max-width: 592px;
+    margin-top: 16px;
+    
+}
+
+#banner .container .btnLermor {
+    background: #FFD2A4;
+    text-transform: uppercase;
+    color: black;
+    font-size: 16px;
+    font-weight: 400;
+    border-radius: 12px;
+    line-height: 16px;
+    padding: 20px 48px;
+    border: none;
+    margin: 12px 0px;
+    margin-top: 32px;
+}
+#banner .container p {
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 16px;
+    margin-top: 64px;
+    max-width: 308px;
+    position: relative;
+}
+#banner .container p::before {
+content: "";
+height: 2px;
+width: 18px;
+background: #FFD2A4;
+position:absolute;
+top: 12px;
+left: -30px;
+
 }
