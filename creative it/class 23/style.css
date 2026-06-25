@@ -5,8 +5,7 @@
 .container {
     max-width: 1280px;
 }
-header .container .collapse{
-}
+
 
 header .navbar {
     background: #0D0D0D;
@@ -87,6 +86,7 @@ width: 592px;
     margin-top: 64px;
     max-width: 308px;
     position: relative;
+    margin-left: 30px;
 }
 #banner .container p::before {
 content: "";
@@ -97,4 +97,14 @@ position:absolute;
 top: 12px;
 left: -30px;
 
+}
+
+#realetive .title{
+    text-align: center;
+}
+#realetive .title h5{
+    font-size: 16px;
+    font-weight: 400;
+    color: #161722;
+    text-transform: uppercase;
 }
