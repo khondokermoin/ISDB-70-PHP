@@ -1,0 +1,192 @@
+/* ==========================================================================
+   Base Styles & Variables
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    /* Brand Colors */
+    --primary: #2563EB;
+    --primary-hover: #1D4ED8;
+    --secondary: #7C3AED;
+    --accent: #06B6D4;
+    --success: #22C55E;
+    
+    /* Backgrounds & Surfaces */
+    --bg-light: #F8FAFC;
+    --card-bg: #FFFFFF;
+    
+    /* Typography Colors */
+    --text-dark: #0F172A;
+    --text-muted: #64748B;
+    --text-light: #94A3B8;
+    
+    /* UI Elements */
+    --border-color: #E2E8F0;
+    --radius-md: 0.5rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+    --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-dark);
+}
+
+a {
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+/* ==========================================================================
+   Premium UI Components
+   ========================================================================== */
+/* Buttons */
+.btn-primary-custom {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+}
+
+.btn-primary-custom:hover {
+    background: var(--primary-hover);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-outline-custom {
+    border: 2px solid var(--border-color);
+    color: var(--text-dark);
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    background: transparent;
+}
+
+.btn-outline-custom:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: #F0F4FF;
+}
+
+/* Badges */
+.badge-soft-primary { background: #DBEAFE; color: var(--primary); }
+.badge-soft-success { background: #DCFCE7; color: var(--success); }
+.badge-soft-secondary { background: #F3E8FF; color: var(--secondary); }
+.badge-bestseller {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: #FEF08A;
+    color: #854D0E;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Cards */
+.saas-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.saas-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-5px);
+}
+
+/* Course Image Wrapper */
+.course-img-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    overflow: hidden;
+    background: var(--border-color);
+}
+
+.course-img-wrapper img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.saas-card:hover .course-img-wrapper img {
+    transform: scale(1.05);
+}
+
+/* Typography Utilities */
+.text-muted-custom { color: var(--text-muted); }
+.font-weight-600 { font-weight: 600; }
+.text-sm { font-size: 0.875rem; }
+.text-xs { font-size: 0.75rem; }
+
+/* Custom Sections */
+.hero-section {
+    background: linear-gradient(135deg, rgba(248, 250, 252, 1) 0%, rgba(226, 232, 240, 0.5) 100%);
+    padding: 6rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.category-icon-box {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    background: var(--bg-light);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.saas-card:hover .category-icon-box {
+    background: var(--primary);
+    color: #fff !important;
+}
+
+/* Static UI Utilities (Replacing JS functionality) */
+.static-dropdown-menu {
+    display: none;
+    position: absolute;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    padding: 1rem;
+    z-index: 1000;
+}
+/* CSS Hover to replace JS Dropdown */
+.nav-item.dropdown-hover:hover .static-dropdown-menu {
+    display: block;
+}
